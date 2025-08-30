@@ -138,3 +138,20 @@ resource "google_compute_global_address" "ingress" {
   name    = "${var.project_name}-ingress-ip"
   project = var.project_id
 }
+
+# Private IP allocation for managed services (Cloud SQL)
+resource "google_compute_global_address" "private_service_access" {
+  name          = "${var.project_name}-private-service-access"
+  purpose       = "VPC_PEERING"
+  address_type  = "INTERNAL"
+  prefix_length = 16
+  network       = google_compute_network.main.id
+  project       = var.project_id
+}
+
+# Private service access connection for Cloud SQL
+resource "google_service_networking_connection" "private_service_access" {
+  network                 = google_compute_network.main.id
+  service                 = "servicenetworking.googleapis.com"
+  reserved_peering_ranges = [google_compute_global_address.private_service_access.name]
+}

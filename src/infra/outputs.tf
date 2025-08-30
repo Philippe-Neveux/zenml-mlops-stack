@@ -97,3 +97,49 @@ output "argocd_access_info" {
   }
   sensitive = true
 }
+
+# MySQL Database Outputs
+output "mysql_instance_name" {
+  description = "Name of the Cloud SQL MySQL instance"
+  value       = module.mysql.mysql_instance_name
+}
+
+output "mysql_instance_connection_name" {
+  description = "Connection name of the Cloud SQL MySQL instance"
+  value       = module.mysql.mysql_instance_connection_name
+}
+
+output "mysql_instance_private_ip" {
+  description = "Private IP address of the Cloud SQL MySQL instance"
+  value       = module.mysql.mysql_instance_private_ip
+}
+
+output "zenml_database_name" {
+  description = "Name of the ZenML database"
+  value       = module.mysql.zenml_database_name
+}
+
+output "zenml_database_username" {
+  description = "Username for ZenML database access"
+  value       = module.mysql.zenml_database_username
+}
+
+output "zenml_database_connection_info" {
+  description = "ZenML database connection information"
+  value       = module.mysql.zenml_database_connection_info
+}
+
+output "zenml_database_url" {
+  description = "Complete database URL for ZenML configuration"
+  value       = module.mysql.zenml_database_url
+  sensitive   = true
+}
+
+output "zenml_database_secret_ids" {
+  description = "Secret Manager secret IDs for database credentials"
+  value = {
+    password_secret_id    = module.mysql.zenml_database_password_secret_id
+    connection_secret_id  = module.mysql.zenml_db_connection_secret_id
+    root_password_secret_id = module.mysql.mysql_root_password_secret_id
+  }
+}

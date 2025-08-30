@@ -42,7 +42,9 @@ module "project_services" {
     "iam.googleapis.com",
     "container.googleapis.com",
     "secretmanager.googleapis.com",
-    "cloudkms.googleapis.com"
+    "cloudkms.googleapis.com",
+    "sqladmin.googleapis.com",
+    "servicenetworking.googleapis.com"
   ]
 }
 
@@ -91,4 +93,26 @@ module "security" {
   labels = var.common_labels
 
   depends_on = [module.vpc, module.project_services, module.gke]
+}
+
+# MySQL Database Module
+module "mysql" {
+  source = "./modules/mysql"
+
+  project_name = var.project_name
+  project_id   = var.project_id
+  region       = var.region
+
+  private_network_id = module.vpc.network_id
+
+  # Network access configuration for GKE connectivity
+  gke_cluster_subnet_cidrs = [
+    module.vpc.gke_nodes_subnet_cidr,
+    module.vpc.pods_cidr,
+    module.vpc.services_cidr
+  ]
+
+  labels = var.common_labels
+
+  depends_on = [module.vpc, module.project_services]
 }

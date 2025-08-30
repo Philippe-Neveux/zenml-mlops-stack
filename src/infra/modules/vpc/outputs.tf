@@ -69,3 +69,44 @@ output "ingress_ip_name" {
   description = "Name of the global IP address for ingress"
   value       = google_compute_global_address.ingress.name
 }
+
+output "private_service_access_address" {
+  description = "Private service access IP address range"
+  value       = google_compute_global_address.private_service_access.address
+}
+
+output "private_service_access_name" {
+  description = "Name of the private service access range"
+  value       = google_compute_global_address.private_service_access.name
+}
+
+# CIDR block outputs for networking
+output "vpc_cidr" {
+  description = "CIDR block of the VPC"
+  value       = var.vpc_cidr
+}
+
+output "gke_nodes_subnet_cidr" {
+  description = "CIDR block of the GKE nodes subnet"
+  value       = google_compute_subnetwork.gke_nodes_subnet.ip_cidr_range
+}
+
+output "pods_cidr" {
+  description = "CIDR block for pods secondary range"
+  value       = google_compute_subnetwork.gke_nodes_subnet.secondary_ip_range[0].ip_cidr_range
+}
+
+output "services_cidr" {
+  description = "CIDR block for services secondary range"
+  value       = google_compute_subnetwork.gke_nodes_subnet.secondary_ip_range[1].ip_cidr_range
+}
+
+output "subnet_cidrs" {
+  description = "Map of all subnet CIDR blocks"
+  value = {
+    gke_nodes_subnet = google_compute_subnetwork.gke_nodes_subnet.ip_cidr_range
+    pods            = google_compute_subnetwork.gke_nodes_subnet.secondary_ip_range[0].ip_cidr_range
+    services        = google_compute_subnetwork.gke_nodes_subnet.secondary_ip_range[1].ip_cidr_range
+    non_gke_workloads = google_compute_subnetwork.non_gke_workloads_subnet.ip_cidr_range
+  }
+}
