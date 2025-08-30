@@ -31,6 +31,18 @@ variable "subnet_name" {
   type        = string
 }
 
+variable "pods_range_name" {
+  description = "Name of the secondary IP range for pods"
+  type        = string
+  default     = "pods"
+}
+
+variable "services_range_name" {
+  description = "Name of the secondary IP range for services"
+  type        = string
+  default     = "services"
+}
+
 variable "cluster_version" {
   description = "Kubernetes version for the GKE cluster"
   type        = string

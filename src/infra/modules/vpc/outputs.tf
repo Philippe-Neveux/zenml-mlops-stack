@@ -17,37 +17,37 @@ output "network_self_link" {
 
 output "subnet_name" {
   description = "Name of the primary subnet"
-  value       = google_compute_subnetwork.primary.name
+  value       = google_compute_subnetwork.gke_nodes_subnet.name
 }
 
 output "subnet_id" {
   description = "ID of the primary subnet"
-  value       = google_compute_subnetwork.primary.id
+  value       = google_compute_subnetwork.gke_nodes_subnet.id
 }
 
 output "subnet_self_link" {
   description = "Self link of the primary subnet"
-  value       = google_compute_subnetwork.primary.self_link
+  value       = google_compute_subnetwork.gke_nodes_subnet.self_link
 }
 
 output "secondary_subnet_name" {
   description = "Name of the secondary subnet"
-  value       = google_compute_subnetwork.secondary.name
+  value       = google_compute_subnetwork.non_gke_workloads_subnet.name
 }
 
 output "secondary_subnet_id" {
   description = "ID of the secondary subnet"
-  value       = google_compute_subnetwork.secondary.id
+  value       = google_compute_subnetwork.non_gke_workloads_subnet.id
 }
 
 output "pods_range_name" {
   description = "Name of the pods secondary IP range"
-  value       = google_compute_subnetwork.primary.secondary_ip_range[0].range_name
+  value       = google_compute_subnetwork.gke_nodes_subnet.secondary_ip_range[0].range_name
 }
 
 output "services_range_name" {
   description = "Name of the services secondary IP range"
-  value       = google_compute_subnetwork.primary.secondary_ip_range[1].range_name
+  value       = google_compute_subnetwork.gke_nodes_subnet.secondary_ip_range[1].range_name
 }
 
 output "router_name" {

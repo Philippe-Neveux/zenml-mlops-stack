@@ -34,8 +34,3 @@ output "internal_dns_zone_dns_name" {
   description = "DNS name of the internal DNS zone"
   value       = google_dns_managed_zone.internal.dns_name
 }
-
-output "binary_authorization_policy_id" {
-  description = "ID of the binary authorization policy"
-  value       = var.enable_binary_authorization ? google_binary_authorization_policy.main[0].id : null
-}

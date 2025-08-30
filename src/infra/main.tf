@@ -30,6 +30,21 @@ provider "google" {
   zone    = var.zone
 }
 
+# Enable required APIs
+module "project_services" {
+  source  = "terraform-google-modules/project-factory/google//modules/project_services"
+  version = "~> 18.0"
+
+  project_id                  = var.project_id
+
+  activate_apis = [
+    "compute.googleapis.com",
+    "iam.googleapis.com",
+    "container.googleapis.com",
+    "secretmanager.googleapis.com",
+    "cloudkms.googleapis.com"
+  ]
+}
 
 # VPC Module
 module "vpc" {
@@ -40,6 +55,8 @@ module "vpc" {
   region       = var.region
 
   labels = var.common_labels
+
+  depends_on = [module.project_services]
 }
 
 # GKE Module
@@ -51,12 +68,14 @@ module "gke" {
   region       = var.region
   zones        = ["${var.zone}"]
 
-  network_name = module.vpc.network_name
-  subnet_name  = module.vpc.subnet_name
+  network_name        = module.vpc.network_name
+  subnet_name         = module.vpc.subnet_name
+  pods_range_name     = module.vpc.pods_range_name
+  services_range_name = module.vpc.services_range_name
 
   labels = var.common_labels
 
-  depends_on = [module.vpc]
+  depends_on = [module.vpc, module.project_services]
 }
 
 # Security Module
@@ -71,5 +90,5 @@ module "security" {
 
   labels = var.common_labels
 
-  depends_on = [module.vpc]
+  depends_on = [module.vpc, module.project_services, module.gke]
 }

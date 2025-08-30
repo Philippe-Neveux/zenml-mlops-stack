@@ -49,8 +49,8 @@ resource "google_container_cluster" "main" {
 
   # IP allocation policy for secondary ranges
   ip_allocation_policy {
-    cluster_secondary_range_name  = "pods"
-    services_secondary_range_name = "services"
+    cluster_secondary_range_name  = var.pods_range_name
+    services_secondary_range_name = var.services_range_name
   }
 
   # Workload Identity (enabled by default in Autopilot)
@@ -58,16 +58,11 @@ resource "google_container_cluster" "main" {
     workload_pool = "${var.project_id}.svc.id.goog"
   }
 
-  # Binary Authorization
-  dynamic "binary_authorization" {
-    for_each = var.enable_binary_authorization ? [1] : []
-    content {
-      evaluation_mode = "PROJECT_SINGLETON_POLICY_ENFORCE"
-    }
-  }
-
   # Resource labels
   resource_labels = var.labels
+
+  # Note: Autopilot automatically manages node configuration
+  # Network tags are applied automatically by Google
 
   # Maintenance policy
   maintenance_policy {

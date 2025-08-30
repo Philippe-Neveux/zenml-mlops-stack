@@ -57,31 +57,19 @@ output "cluster_master_version" {
   value       = module.gke.cluster_master_version
 }
 
-# Node Pools Outputs
-output "node_pools" {
-  description = "Map of node pools"
-  value       = module.gke.node_pools
-}
-
-output "node_pools_names" {
-  description = "List of node pool names"
-  value       = module.gke.node_pools_names
-}
-
-# Service Account Outputs
-output "node_service_account_email" {
-  description = "Email of the node service account"
-  value       = module.gke.service_account_email
-}
-
 output "argocd_service_account_email" {
   description = "Email of the ArgoCD service account"
   value       = module.security.argocd_service_account_email
 }
 
-# Workload Identity
+# Autopilot and Workload Identity Outputs
+output "autopilot_enabled" {
+  description = "Whether GKE Autopilot is enabled"
+  value       = module.gke.autopilot_enabled
+}
+
 output "workload_identity_pool" {
-  description = "Workload identity pool"
+  description = "Workload identity pool for secure pod-to-GCP authentication"
   value       = module.gke.workload_identity_pool
 }
 

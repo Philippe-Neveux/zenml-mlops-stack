@@ -25,10 +25,10 @@ variable "subnet_cidrs" {
   description = "CIDR blocks for subnets"
   type        = map(string)
   default = {
-    primary   = "10.0.1.0/24"
-    secondary = "10.0.2.0/24"
-    pods      = "10.1.0.0/16"
-    services  = "10.2.0.0/16"
+    gke-nodes-subnet         = "10.0.1.0/24"
+    non-gke-workloads-subnet = "10.0.2.0/24"
+    pods                     = "10.1.0.0/16"
+    services                 = "10.2.0.0/16"
   }
 }
 

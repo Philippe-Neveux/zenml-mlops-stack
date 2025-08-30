@@ -13,7 +13,7 @@ resource "google_compute_network" "main" {
 # Primary Subnet for GKE nodes
 resource "google_compute_subnetwork" "gke_nodes_subnet" {
   name          = "${var.project_name}-gke-nodes-subnet"
-  ip_cidr_range = var.subnet_cidrs["primary"]
+  ip_cidr_range = var.subnet_cidrs["gke-nodes-subnet"]
   region        = var.region
   network       = google_compute_network.main.id
   project       = var.project_id
@@ -36,7 +36,7 @@ resource "google_compute_subnetwork" "gke_nodes_subnet" {
 # Secondary subnet for additional workloads
 resource "google_compute_subnetwork" "non_gke_workloads_subnet" {
   name          = "${var.project_name}-non-gke-workloads-subnet"
-  ip_cidr_range = var.subnet_cidrs["secondary"]
+  ip_cidr_range = var.subnet_cidrs["non-gke-workloads-subnet"]
   region        = var.region
   network       = google_compute_network.main.id
   project       = var.project_id
@@ -107,9 +107,8 @@ resource "google_compute_firewall" "allow_ssh" {
   }
 
   source_ranges = [
-    "35.235.240.0/20",
-    "118.149.91.118"
-  ] # Google Cloud Console IP range
+    "35.235.240.0/20"  # Google Cloud Console IP range
+  ]
   target_tags = ["ssh"]
 
   priority = 1000
