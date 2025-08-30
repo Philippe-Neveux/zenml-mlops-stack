@@ -41,34 +41,6 @@ resource "google_compute_firewall" "allow_nodeport" {
   priority    = 1000
 }
 
-# Service Account for Workload Identity (example for ArgoCD)
-resource "google_service_account" "argocd" {
-  account_id   = "${var.project_name}-argocd"
-  display_name = "ArgoCD Service Account"
-  description  = "Service account for ArgoCD workloads"
-  project      = var.project_id
-}
-
-# IAM binding for ArgoCD service account
-resource "google_project_iam_member" "argocd_compute_viewer" {
-  project = var.project_id
-  role    = "roles/compute.viewer"
-  member  = "serviceAccount:${google_service_account.argocd.email}"
-}
-
-resource "google_project_iam_member" "argocd_container_developer" {
-  project = var.project_id
-  role    = "roles/container.developer"
-  member  = "serviceAccount:${google_service_account.argocd.email}"
-}
-
-# IAM binding for Workload Identity
-resource "google_service_account_iam_member" "argocd_workload_identity" {
-  service_account_id = google_service_account.argocd.name
-  role               = "roles/iam.workloadIdentityUser"
-  member             = "serviceAccount:${var.project_id}.svc.id.goog[argocd/argocd-application-controller]"
-}
-
 # Cloud DNS zone for internal services (optional)
 resource "google_dns_managed_zone" "internal" {
   name        = "${var.project_name}-internal"
@@ -117,9 +89,36 @@ resource "google_secret_manager_secret" "app_config" {
   labels = var.labels
 }
 
-# IAM policy for Secret Manager
-resource "google_secret_manager_secret_iam_member" "app_config_accessor" {
-  secret_id = google_secret_manager_secret.app_config.secret_id
-  role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${google_service_account.argocd.email}"
+# ZenML Service Account for Secret Manager access
+resource "google_service_account" "zenml" {
+  account_id   = "${var.project_name}-zenml"
+  display_name = "ZenML Service Account"
+  description  = "Service account for ZenML workloads to access secrets and services"
+  project      = var.project_id
+}
+
+# IAM bindings for ZenML service account
+resource "google_project_iam_member" "zenml_secret_manager_accessor" {
+  project = var.project_id
+  role    = "roles/secretmanager.secretAccessor"
+  member  = "serviceAccount:${google_service_account.zenml.email}"
+}
+
+resource "google_project_iam_member" "zenml_cloudsql_client" {
+  project = var.project_id
+  role    = "roles/cloudsql.client"
+  member  = "serviceAccount:${google_service_account.zenml.email}"
+}
+
+resource "google_project_iam_member" "zenml_storage_admin" {
+  project = var.project_id
+  role    = "roles/storage.admin"
+  member  = "serviceAccount:${google_service_account.zenml.email}"
+}
+
+# Workload Identity binding for ZenML
+resource "google_service_account_iam_member" "zenml_workload_identity" {
+  service_account_id = google_service_account.zenml.name
+  role               = "roles/iam.workloadIdentityUser"
+  member             = "serviceAccount:${var.project_id}.svc.id.goog[zenml/zenml-server]"
 }

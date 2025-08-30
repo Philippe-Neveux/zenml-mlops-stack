@@ -1,6 +1,6 @@
-# Terraform Infrastructure for ZenML MLOps Stack
+# Kubernetes Infrastructure with Terraform
 
-This Terraform configuration sets up a production-ready Kubernetes infrastructure on Google Cloud Platform (GCP) that supports ArgoCD and MLOps workloads.
+This Terraform configuration sets up a production-ready Kubernetes infrastructure on Google Cloud Platform (GCP) that supports ZenML and MLOps workloads.
 
 ## Architecture Overview
 
@@ -142,26 +142,34 @@ For production environments, configure remote state storage:
 
 ## Post-Deployment Setup
 
-### 1. Install ArgoCD
+### 1. Configure kubectl Access
 
 ```bash
-# Create argocd namespace
-kubectl create namespace argocd
+# Configure kubectl to access your cluster
+gcloud container clusters get-credentials $(terraform output -raw cluster_name) \
+  --region $(terraform output -raw region) \
+  --project $(terraform output -raw project_id)
 
-# Install ArgoCD
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-
-# Wait for pods to be ready
-kubectl wait --for=condition=available --timeout=300s deployment/argocd-server -n argocd
-
-# Get initial admin password
-kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
-
-# Port forward to access ArgoCD UI
-kubectl port-forward svc/argocd-server -n argocd 8080:443
+# Verify cluster access
+kubectl cluster-info
+kubectl get nodes
 ```
 
-### 2. Install Google Cloud Load Balancer Controller (GKE Ingress)
+### 2. Verify ZenML Prerequisites
+
+```bash
+# Check Secret Manager access
+gcloud secrets list --filter="name~zenml" --project=$(terraform output -raw project_id)
+
+# Test database connectivity
+kubectl run mysql-test --image=mysql:8.0 --rm -it --restart=Never -- \
+  mysql -h $(terraform output -raw mysql_instance_private_ip) \
+  -u $(terraform output -raw zenml_database_username) \
+  -p$(gcloud secrets versions access latest --secret="$(terraform output -raw zenml_database_password_secret_id)") \
+  $(terraform output -raw zenml_database_name)
+```
+
+### 3. Install Google Cloud Load Balancer Controller (GKE Ingress)
 
 GKE comes with built-in ingress controller, but you can also install additional controllers:
 
@@ -177,22 +185,22 @@ helm install ingress-nginx ingress-nginx/ingress-nginx \
   --set controller.service.annotations."cloud\.google\.com/load-balancer-type"="External"
 ```
 
-### 3. Configure Workload Identity for ArgoCD
+### 4. Set up ZenML Workload Identity
 
 ```bash
-# Create Kubernetes service account
-kubectl create serviceaccount argocd-application-controller -n argocd
+# Create ZenML namespace
+kubectl create namespace zenml
 
-# Bind the Kubernetes service account to Google service account
-gcloud iam service-accounts add-iam-policy-binding \
-  zenml-mlops-dev-argocd@YOUR_PROJECT_ID.iam.gserviceaccount.com \
-  --role roles/iam.workloadIdentityUser \
-  --member "serviceAccount:YOUR_PROJECT_ID.svc.id.goog[argocd/argocd-application-controller]"
+# Create Kubernetes service account for ZenML
+kubectl create serviceaccount zenml-server -n zenml
 
-# Annotate the Kubernetes service account
-kubectl annotate serviceaccount argocd-application-controller \
-  -n argocd \
-  iam.gke.io/gcp-service-account=zenml-mlops-dev-argocd@YOUR_PROJECT_ID.iam.gserviceaccount.com
+# Annotate the Kubernetes service account with the Google service account
+kubectl annotate serviceaccount zenml-server \
+  -n zenml \
+  iam.gke.io/gcp-service-account=$(terraform output -raw zenml_service_account_email)
+
+# Verify the setup
+kubectl describe serviceaccount zenml-server -n zenml
 ```
 
 ## Security Considerations
@@ -207,7 +215,7 @@ kubectl annotate serviceaccount argocd-application-controller \
    - GKE cluster endpoint access restricted by authorized networks
    - IAM service accounts with least-privilege principles
    - Workload Identity for secure pod-to-GCP service communication
-   - Binary Authorization (optional) for container image verification
+   - ZenML service account with Secret Manager and Cloud SQL access
 
 3. **Encryption**:
    - Application-layer Secrets Encryption with Cloud KMS

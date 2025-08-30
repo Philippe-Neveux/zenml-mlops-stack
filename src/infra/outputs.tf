@@ -57,11 +57,6 @@ output "cluster_master_version" {
   value       = module.gke.cluster_master_version
 }
 
-output "argocd_service_account_email" {
-  description = "Email of the ArgoCD service account"
-  value       = module.security.argocd_service_account_email
-}
-
 # Autopilot and Workload Identity Outputs
 output "autopilot_enabled" {
   description = "Whether GKE Autopilot is enabled"
@@ -83,19 +78,6 @@ output "app_config_secret_id" {
 output "configure_kubectl" {
   description = "Command to configure kubectl"
   value       = "gcloud container clusters get-credentials ${module.gke.cluster_name} --region ${var.region} --project ${var.project_id}"
-}
-
-# ArgoCD Access Information
-output "argocd_access_info" {
-  description = "Information for accessing ArgoCD"
-  value = {
-    cluster_name           = module.gke.cluster_name
-    cluster_endpoint       = module.gke.cluster_endpoint
-    kubectl_config_command = "gcloud container clusters get-credentials ${module.gke.cluster_name} --region ${var.region} --project ${var.project_id}"
-    ingress_ip             = module.vpc.ingress_ip_address
-    service_account        = module.security.argocd_service_account_email
-  }
-  sensitive = true
 }
 
 # MySQL Database Outputs
@@ -141,5 +123,106 @@ output "zenml_database_secret_ids" {
     password_secret_id    = module.mysql.zenml_database_password_secret_id
     connection_secret_id  = module.mysql.zenml_db_connection_secret_id
     root_password_secret_id = module.mysql.mysql_root_password_secret_id
+  }
+}
+
+# Project Information
+output "project_id" {
+  description = "Google Cloud Project ID"
+  value       = var.project_id
+}
+
+output "project_name" {
+  description = "Project name"
+  value       = var.project_name
+}
+
+output "region" {
+  description = "Google Cloud region"
+  value       = var.region
+}
+
+# ZenML Service Account Outputs
+output "zenml_service_account_email" {
+  description = "Email of the ZenML service account for Secret Manager access"
+  value       = module.security.zenml_service_account_email
+}
+
+output "zenml_service_account_name" {
+  description = "Name of the ZenML service account"
+  value       = module.security.zenml_service_account_name
+}
+
+# ZenML Deployment Configuration
+output "zenml_helm_database_config" {
+  description = "Database configuration formatted for ZenML Helm chart values"
+  value       = module.mysql.zenml_helm_database_config
+}
+
+output "zenml_secret_manager_config" {
+  description = "Secret Manager configuration for ZenML"
+  value = {
+    project_id            = var.project_id
+    service_account_email = module.security.zenml_service_account_email
+    region               = var.region
+  }
+}
+
+# ZenML Complete Deployment Information
+output "zenml_deployment_info" {
+  description = "Complete information needed for ZenML deployment"
+  value = {
+    # Project Information
+    project_id   = var.project_id
+    project_name = var.project_name
+    region       = var.region
+    
+    # Database Configuration
+    database = {
+      host     = module.mysql.mysql_instance_private_ip
+      port     = "3306"
+      database = module.mysql.zenml_database_name
+      username = module.mysql.zenml_database_username
+      ssl_mode = "PREFERRED"
+    }
+    
+    # Secret Manager
+    secret_manager = {
+      project_id            = var.project_id
+      service_account_email = module.security.zenml_service_account_email
+      password_secret_name  = module.mysql.zenml_database_password_secret_id
+      connection_secret_name = module.mysql.zenml_db_connection_secret_id
+    }
+    
+    # Kubernetes Configuration
+    kubernetes = {
+      cluster_name     = module.gke.cluster_name
+      cluster_endpoint = module.gke.cluster_endpoint
+      region          = var.region
+      service_account = module.security.zenml_service_account_email
+    }
+  }
+  sensitive = true
+}
+
+# Network Connectivity Information
+output "mysql_network_diagnostics" {
+  description = "Network diagnostics information for troubleshooting MySQL connectivity"
+  value       = module.mysql.mysql_network_diagnostics
+}
+
+output "vpc_subnet_cidrs" {
+  description = "VPC subnet CIDR blocks for network configuration"
+  value       = module.vpc.subnet_cidrs
+}
+
+# Quick Access Commands
+output "quick_commands" {
+  description = "Quick commands for accessing and managing the infrastructure"
+  value = {
+    configure_kubectl    = "gcloud container clusters get-credentials ${module.gke.cluster_name} --region ${var.region} --project ${var.project_id}"
+    get_mysql_password   = "gcloud secrets versions access latest --secret='${module.mysql.zenml_database_password_secret_id}' --project='${var.project_id}'"
+    test_mysql_connection = "kubectl run mysql-test --image=mysql:8.0 --rm -it --restart=Never -- mysql -h ${module.mysql.mysql_instance_private_ip} -u ${module.mysql.zenml_database_username} -p${module.mysql.zenml_database_name}"
+    list_secrets         = "gcloud secrets list --filter='name~zenml' --project='${var.project_id}'"
   }
 }
