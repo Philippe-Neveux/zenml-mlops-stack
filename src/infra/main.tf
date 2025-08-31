@@ -30,6 +30,33 @@ provider "google" {
   zone    = var.zone
 }
 
+# Data sources for Kubernetes providers
+data "google_client_config" "default" {}
+
+data "google_container_cluster" "cluster" {
+  name     = module.gke.cluster_name
+  location = var.region
+  project  = var.project_id
+  
+  depends_on = [module.gke]
+}
+
+# Configure Kubernetes provider
+provider "kubernetes" {
+  host                   = "https://${data.google_container_cluster.cluster.endpoint}"
+  token                  = data.google_client_config.default.access_token
+  cluster_ca_certificate = base64decode(data.google_container_cluster.cluster.master_auth[0].cluster_ca_certificate)
+}
+
+# Configure Helm provider
+provider "helm" {
+  kubernetes {
+    host                   = "https://${data.google_container_cluster.cluster.endpoint}"
+    token                  = data.google_client_config.default.access_token
+    cluster_ca_certificate = base64decode(data.google_container_cluster.cluster.master_auth[0].cluster_ca_certificate)
+  }
+}
+
 # Enable required APIs
 module "project_services" {
   source  = "terraform-google-modules/project-factory/google//modules/project_services"
@@ -44,7 +71,8 @@ module "project_services" {
     "secretmanager.googleapis.com",
     "cloudkms.googleapis.com",
     "sqladmin.googleapis.com",
-    "servicenetworking.googleapis.com"
+    "servicenetworking.googleapis.com",
+    "dns.googleapis.com"
   ]
 }
 
@@ -115,4 +143,16 @@ module "mysql" {
   labels = var.common_labels
 
   depends_on = [module.vpc, module.project_services]
+}
+
+module "dns" {
+  source = "./modules/dns"
+  
+  project_id   = var.project_id
+  
+  # Point to the LoadBalancer IP
+  zenml_ip_address   = module.vpc.ingress_ip_address
+  domain_name        = var.domain_name
+  
+  count = var.domain_name != "" ? 1 : 0
 }

@@ -33,3 +33,22 @@ variable "common_labels" {
     managed-by = "terraform"
   }
 }
+
+# Domain Configuration
+variable "domain_name" {
+  description = "Domain name for ingress (optional, if not provided will use nip.io for demo)"
+  type        = string
+  default     = "test-domain-name.nip.io"
+}
+
+variable "enable_https" {
+  description = "Enable HTTPS with Let's Encrypt certificates"
+  type        = bool
+  default     = true
+}
+
+variable "admin_email" {
+  description = "Email address for Let's Encrypt certificate notifications"
+  type        = string
+  default     = "admin@example.com"
+}

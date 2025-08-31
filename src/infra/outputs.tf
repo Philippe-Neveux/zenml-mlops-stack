@@ -226,3 +226,15 @@ output "quick_commands" {
     list_secrets         = "gcloud secrets list --filter='name~zenml' --project='${var.project_id}'"
   }
 }
+
+
+# DNS Outputs (only if domain_name is provided)
+output "dns_zone_name" {
+  description = "Name of the DNS zone"
+  value       = var.domain_name != "" ? module.dns[0].zone_name : null
+}
+
+output "dns_name_servers" {
+  description = "Name servers for the DNS zone"
+  value       = var.domain_name != "" ? module.dns[0].name_servers : null
+}
