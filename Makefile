@@ -28,18 +28,22 @@ connect-k8s-cluster:
 kube-apply:	connect-k8s-cluster
 	@echo "Checking for terminating namespaces..."
 	@echo "Deploying cert-manager..."
-	kubectl apply -f src/k8s-cluster/cert-manager/cert-manager.yaml
+	kubectl apply -f src/k8s-cluster/cert-manager/01_namespace.yaml
+	kubectl apply -f src/k8s-cluster/cert-manager/02_cert-manager.yaml
 	@echo "Waiting for cert-manager pods to be ready..."
 	kubectl wait --namespace cert-manager --for=condition=ready pod --selector=app.kubernetes.io/name=cert-manager --timeout=120s
 	kubectl wait --namespace cert-manager --for=condition=ready pod --selector=app.kubernetes.io/name=webhook --timeout=120s
-
-	@echo "⚠️  Skipping ClusterIssuers for now (webhook issue)"
-# 	kubectl apply -f src/k8s-cluster/cert-manager/cluster-issuers.yaml 
+	
+	@echo "Waiting for cert-manager webhook to be fully ready..."
+	@sleep 30
+	@echo "Deploying ClusterIssuers..."
+	kubectl apply -f src/k8s-cluster/cert-manager/03_cluster-issuers.yaml || (echo "ClusterIssuer creation failed, trying without webhook validation..." && kubectl label namespace cert-manager cert-manager.io/disable-validation=true --overwrite && sleep 5 && kubectl apply -f src/k8s-cluster/cert-manager/03_cluster-issuers.yaml && kubectl label namespace cert-manager cert-manager.io/disable-validation-)
+	
 	@echo "Deploying NGINX Ingress Controller..."
-	kubectl apply -f src/k8s-cluster/ingress-nginx/rbac.yaml
-	kubectl apply -f src/k8s-cluster/ingress-nginx/controller.yaml
-	kubectl apply -f src/k8s-cluster/ingress-nginx/service.yaml
-	kubectl apply -f src/k8s-cluster/ingress-nginx/admission-webhook.yaml
+	kubectl apply -f src/k8s-cluster/ingress-nginx/01_rbac.yaml
+	kubectl apply -f src/k8s-cluster/ingress-nginx/02_controller.yaml
+	kubectl apply -f src/k8s-cluster/ingress-nginx/03_services.yaml
+	kubectl apply -f src/k8s-cluster/ingress-nginx/04_admission-webhook.yaml
 
 	@echo "Waiting for NGINX Ingress to be ready..."
 	kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=120s
