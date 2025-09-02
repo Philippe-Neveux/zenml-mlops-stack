@@ -89,6 +89,11 @@ zenml-login:
 	uv run zenml login https://zenml.34.40.173.65.nip.io
 
 # Run pipelines
+run-process: zenml-login
+	@echo "Running training pipeline..."
+	uv run src/zenml_mlops_stack/main.py
+
+# Run pipelines
 run-training: zenml-login
 	@echo "Running training pipeline..."
 	uv run src/zenml_mlops_stack/train.py
