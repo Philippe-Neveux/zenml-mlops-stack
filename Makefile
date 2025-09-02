@@ -78,3 +78,12 @@ ZENML_VERSION := 0.84.3
 zenml-get-helm-chart:
 	@echo "Getting ZenML Helm chart..."
 	cd src/ && helm pull oci://public.ecr.aws/zenml/zenml --version $(ZENML_VERSION) --untar
+
+zenml-deploy:
+	cd src/zenml && helm -n zenml install zenml-server . \
+		--create-namespace \
+		--values custom-values.yaml
+
+zenml-login:
+	@echo "Logging into ZenML..."
+	uv run zenml login https://zenml.34.40.173.65.nip.io

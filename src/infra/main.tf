@@ -131,15 +131,3 @@ module "mysql" {
 
   depends_on = [module.vpc, module.project_services]
 }
-
-module "dns" {
-  source = "./modules/dns"
-  
-  project_id   = var.project_id
-  
-  # Point to the LoadBalancer IP
-  zenml_ip_address   = module.vpc.ingress_ip_address
-  domain_name        = var.domain_name
-  
-  count = var.domain_name != "" ? 1 : 0
-}

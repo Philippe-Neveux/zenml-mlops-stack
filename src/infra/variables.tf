@@ -34,13 +34,6 @@ variable "common_labels" {
   }
 }
 
-# Domain Configuration
-variable "domain_name" {
-  description = "Domain name for ingress (optional, if not provided will use nip.io for demo)"
-  type        = string
-  default     = "test-domain-name.nip.io"
-}
-
 variable "enable_https" {
   description = "Enable HTTPS with Let's Encrypt certificates"
   type        = bool
