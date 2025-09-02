@@ -153,6 +153,17 @@ output "zenml_service_account_name" {
   value       = module.security.zenml_service_account_name
 }
 
+# ZenML Custom IAM Roles Outputs
+output "zenml_secrets_store_creator_role_id" {
+  description = "ID of the ZenML Secrets Store Creator custom role"
+  value       = module.security.zenml_secrets_store_creator_role_id
+}
+
+output "zenml_secrets_store_editor_role_id" {
+  description = "ID of the ZenML Secrets Store Editor custom role"
+  value       = module.security.zenml_secrets_store_editor_role_id
+}
+
 # ZenML Deployment Configuration
 output "zenml_helm_database_config" {
   description = "Database configuration formatted for ZenML Helm chart values"

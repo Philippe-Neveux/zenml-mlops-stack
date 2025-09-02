@@ -89,6 +89,35 @@ resource "google_secret_manager_secret" "app_config" {
   labels = var.labels
 }
 
+# Custom IAM Roles for ZenML Secret Manager access
+resource "google_project_iam_custom_role" "zenml_secrets_store_creator" {
+  role_id     = "ZenMLServerSecretsStoreCreator"
+  title       = "ZenML Server Secrets Store Creator"
+  description = "Allow the ZenML Server to create new secrets"
+  stage       = "GA"
+  project     = var.project_id
+  
+  permissions = [
+    "secretmanager.secrets.create"
+  ]
+}
+
+resource "google_project_iam_custom_role" "zenml_secrets_store_editor" {
+  role_id     = "ZenMLServerSecretsStoreEditor"
+  title       = "ZenML Server Secrets Store Editor"
+  description = "Allow the ZenML Server to manage its secrets"
+  stage       = "GA"
+  project     = var.project_id
+  
+  permissions = [
+    "secretmanager.secrets.get",
+    "secretmanager.secrets.update",
+    "secretmanager.versions.access",
+    "secretmanager.versions.add",
+    "secretmanager.secrets.delete"
+  ]
+}
+
 # ZenML Service Account for Secret Manager access
 resource "google_service_account" "zenml" {
   account_id   = "${var.project_name}-zenml"
@@ -97,11 +126,23 @@ resource "google_service_account" "zenml" {
   project      = var.project_id
 }
 
-# IAM bindings for ZenML service account
-resource "google_project_iam_member" "zenml_secret_manager_accessor" {
+# IAM bindings for ZenML service account with custom roles
+resource "google_project_iam_member" "zenml_secrets_store_creator" {
   project = var.project_id
-  role    = "roles/secretmanager.secretAccessor"
+  role    = google_project_iam_custom_role.zenml_secrets_store_creator.id
   member  = "serviceAccount:${google_service_account.zenml.email}"
+}
+
+resource "google_project_iam_member" "zenml_secrets_store_editor" {
+  project = var.project_id
+  role    = google_project_iam_custom_role.zenml_secrets_store_editor.id
+  member  = "serviceAccount:${google_service_account.zenml.email}"
+  
+  condition {
+    title       = "limit_access_zenml"
+    description = "Limit access to secrets with prefix zenml-"
+    expression  = "resource.name.startsWith(\"projects/${data.google_project.current.number}/secrets/zenml-\")"
+  }
 }
 
 resource "google_project_iam_member" "zenml_cloudsql_client" {

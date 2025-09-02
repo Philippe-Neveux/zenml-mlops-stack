@@ -25,6 +25,17 @@ output "internal_dns_zone_dns_name" {
   value       = google_dns_managed_zone.internal.dns_name
 }
 
+# Custom IAM Role outputs
+output "zenml_secrets_store_creator_role_id" {
+  description = "ID of the ZenML Secrets Store Creator custom role"
+  value       = google_project_iam_custom_role.zenml_secrets_store_creator.id
+}
+
+output "zenml_secrets_store_editor_role_id" {
+  description = "ID of the ZenML Secrets Store Editor custom role"
+  value       = google_project_iam_custom_role.zenml_secrets_store_editor.id
+}
+
 # ZenML Service Account outputs
 output "zenml_service_account_email" {
   description = "Email of the ZenML service account for Secret Manager access"
