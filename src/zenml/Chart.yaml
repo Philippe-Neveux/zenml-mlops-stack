@@ -1,0 +1,12 @@
+apiVersion: v2
+description: Open source MLOps framework for portable production ready ML pipelines
+home: https://zenml.io
+icon: https://raw.githubusercontent.com/zenml-io/zenml/main/docs/book/.gitbook/assets/zenml_logo.png
+keywords:
+- mlops
+- zenml
+- server
+name: zenml
+sources:
+- https://github.com/zenml-io/zenml
+version: 0.84.3

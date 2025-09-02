@@ -25,31 +25,54 @@ connect-k8s-cluster:
 	echo "Connecting to Kubernetes cluster..."
 	gcloud container clusters get-credentials zenml --region australia-southeast1 --project zenml-470505
 
-kube-apply:	connect-k8s-cluster
-	@echo "Checking for terminating namespaces..."
-	@echo "Deploying cert-manager..."
-	kubectl apply -f src/k8s-cluster/cert-manager/01_namespace.yaml
-	kubectl apply -f src/k8s-cluster/cert-manager/02_cert-manager.yaml
+helm-update:
+	helm repo update
+
+NGINX_INGRESS_CONTROLLER_VERSION := 4.13.2
+
+helm-install-nginx-ingress: helm-update
+	@echo "Installing ingress-nginx resources with helm..."
+	helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+	helm install nginx-ingress ingress-nginx/ingress-nginx \
+		--namespace nginx-ingress \
+		--create-namespace \
+		--version $(NGINX_INGRESS_CONTROLLER_VERSION)
+	@echo "ingress-nginx resources deployed !!!"
+
+CERT_MANAGER_VERSION := v1.18.2
+
+helm-install-cert-manager: helm-update
+	@echo "Installing cert-manager resources..."
+	helm repo add jetstack https://charts.jetstack.io
+	helm install cert-manager jetstack/cert-manager \
+		--namespace cert-manager \
+		--create-namespace \
+		--set installCRDs=true \
+		--version $(CERT_MANAGER_VERSION)
+	@echo "cert-manager resources deployed !!!"
+
+
+kube-apply:	connect-k8s-cluster helm-install-cert-manager helm-install-nginx-ingress
 	@echo "Waiting for cert-manager pods to be ready..."
 	kubectl wait --namespace cert-manager --for=condition=ready pod --selector=app.kubernetes.io/name=cert-manager --timeout=120s
 	kubectl wait --namespace cert-manager --for=condition=ready pod --selector=app.kubernetes.io/name=webhook --timeout=120s
-	
+
 	@echo "Waiting for cert-manager webhook to be fully ready..."
 	@sleep 30
 	@echo "Deploying ClusterIssuers..."
-	kubectl apply -f src/k8s-cluster/cert-manager/03_cluster-issuers.yaml || (echo "ClusterIssuer creation failed, trying without webhook validation..." && kubectl label namespace cert-manager cert-manager.io/disable-validation=true --overwrite && sleep 5 && kubectl apply -f src/k8s-cluster/cert-manager/03_cluster-issuers.yaml && kubectl label namespace cert-manager cert-manager.io/disable-validation-)
+	kubectl apply -f src/k8s-cluster/cert-manager/cluster-issuers.yaml
 	
-	@echo "Deploying NGINX Ingress Controller..."
-	kubectl apply -f src/k8s-cluster/ingress-nginx/01_rbac.yaml
-	kubectl apply -f src/k8s-cluster/ingress-nginx/02_controller.yaml
-	kubectl apply -f src/k8s-cluster/ingress-nginx/03_services.yaml
-	kubectl apply -f src/k8s-cluster/ingress-nginx/04_admission-webhook.yaml
-
 	@echo "Waiting for NGINX Ingress to be ready..."
 	kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=120s
-	@echo "Deploying ZenML..."
-	# kubectl apply -f src/k8s-cluster/zenml/
+# 	@echo "Deploying ZenML..."
+# 	kubectl apply -f src/k8s-cluster/zenml/
 
 kube-cleanup:
-	kubectl delete -f src/gke/
+	kubectl delete -f src/k8s-cluster/
 
+ZENML_VERSION := 0.84.3
+
+# ZenML
+zenml-get-helm-chart:
+	@echo "Getting ZenML Helm chart..."
+	cd src/ && helm pull oci://public.ecr.aws/zenml/zenml --version $(ZENML_VERSION) --untar
