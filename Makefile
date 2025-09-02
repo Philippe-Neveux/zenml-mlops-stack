@@ -48,6 +48,7 @@ helm-install-cert-manager: helm-update
 		--namespace cert-manager \
 		--create-namespace \
 		--set installCRDs=true \
+		--set global.leaderElection.namespace=cert-manager \
 		--version $(CERT_MANAGER_VERSION)
 	@echo "cert-manager resources deployed !!!"
 
@@ -55,10 +56,11 @@ helm-install-cert-manager: helm-update
 kube-apply:	connect-k8s-cluster helm-install-cert-manager helm-install-nginx-ingress
 	@echo "Waiting for cert-manager pods to be ready..."
 	kubectl wait --namespace cert-manager --for=condition=ready pod --selector=app.kubernetes.io/name=cert-manager --timeout=120s
+	kubectl wait --namespace cert-manager --for=condition=ready pod --selector=app.kubernetes.io/name=cainjector --timeout=120s
 	kubectl wait --namespace cert-manager --for=condition=ready pod --selector=app.kubernetes.io/name=webhook --timeout=120s
 
-	@echo "Waiting for cert-manager webhook to be fully ready..."
-	@sleep 30
+	@echo "Waiting for cert-manager webhook to be fully ready and CA bundle injection..."
+	@sleep 60
 	@echo "Deploying ClusterIssuers..."
 	kubectl apply -f src/k8s-cluster/cert-manager/cluster-issuers.yaml
 	
