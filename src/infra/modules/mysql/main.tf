@@ -93,6 +93,15 @@ resource "google_sql_user" "zenml" {
   password = random_password.zenml_db_password.result
 }
 
+# ZenML Database User for external access (from authorized IPs)
+resource "google_sql_user" "zenml_external" {
+  name     = var.zenml_db_username
+  instance = google_sql_database_instance.zenml_mysql.name
+  project  = var.project_id
+  password = random_password.zenml_db_password.result
+  host     = "%"  # Allow connections from any host (restricted by authorized_networks)
+}
+
 # Store database credentials in Secret Manager
 resource "google_secret_manager_secret" "mysql_root_password" {
   secret_id = "${var.project_name}-mysql-root-password"

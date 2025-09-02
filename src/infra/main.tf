@@ -127,6 +127,15 @@ module "mysql" {
     module.vpc.services_cidr
   ]
 
+  # Enable public IP with authorized networks for secure internet access
+  public_ip_enabled = true
+  authorized_networks = [
+    {
+      name  = "admin-access"
+      value = "118.149.85.5/32"  # Your current public IP
+    }
+  ]
+
   labels = var.common_labels
 
   depends_on = [module.vpc, module.project_services]

@@ -96,6 +96,11 @@ output "mysql_instance_private_ip" {
   value       = module.mysql.mysql_instance_private_ip
 }
 
+output "mysql_instance_public_ip" {
+  description = "Public IP address of the Cloud SQL MySQL instance"
+  value       = module.mysql.mysql_instance_public_ip
+}
+
 output "zenml_database_name" {
   description = "Name of the ZenML database"
   value       = module.mysql.zenml_database_name

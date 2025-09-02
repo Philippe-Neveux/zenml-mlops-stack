@@ -9,5 +9,5 @@ dependencies = [
     "pip>=25.2",
     "pyarrow>=21.0.0",
     "scikit-learn>=1.7.1",
-    "zenml[server]>=0.84.3",
+    "zenml[server]==0.84.3",
 ]

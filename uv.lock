@@ -2653,5 +2653,5 @@ requires-dist = [
     { name = "pip", specifier = ">=25.2" },
     { name = "pyarrow", specifier = ">=21.0.0" },
     { name = "scikit-learn", specifier = ">=1.7.1" },
-    { name = "zenml", extras = ["server"], specifier = ">=0.84.3" },
+    { name = "zenml", extras = ["server"], specifier = "==0.84.3" },
 ]
