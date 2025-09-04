@@ -72,9 +72,11 @@ kube-apply:	connect-k8s-cluster helm-install-cert-manager helm-install-nginx-ing
 kube-cleanup:
 	kubectl delete -f src/k8s-cluster/
 
+
+###############
+# ZenML
 ZENML_VERSION := 0.84.3
 
-# ZenML
 zenml-get-helm-chart:
 	@echo "Getting ZenML Helm chart..."
 	cd src/ && helm pull oci://public.ecr.aws/zenml/zenml --version $(ZENML_VERSION) --untar
@@ -88,12 +90,52 @@ zenml-login:
 	@echo "Logging into ZenML..."
 	uv run zenml login https://zenml.34.40.173.65.nip.io
 
+###############
 # Run pipelines
 run-process: zenml-login
 	@echo "Running training pipeline..."
 	uv run src/zenml_mlops_stack/main.py
 
-# Run pipelines
 run-training: zenml-login
 	@echo "Running training pipeline..."
 	uv run src/zenml_mlops_stack/train.py
+
+
+###############
+# ArgoCD
+argocd-install: connect-k8s-cluster
+	@echo "Installing ArgoCD..."
+	kubectl create namespace argocd
+	kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+argocd-cli:
+	@echo "Installing ArgoCD CLI..."
+	brew install argocd
+
+argocd-setup-lb: connect-k8s-cluster
+	@echo "Setting up ArgoCD LoadBalancer..."
+	kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
+	sleep 60
+	kubectl get svc argocd-server -n argocd -o=jsonpath='{.status.loadBalancer.ingress[0].ip}'
+
+argocd-get-password:
+	@echo "ArgoCD admin password:"
+	@kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d && echo
+
+argocd-get-external-ip:
+	@echo "ArgoCD External IP:"
+	@kubectl get svc argocd-server -n argocd -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+
+argocd-access-info:
+	@echo "=== ArgoCD Access Information ==="
+	@echo "External IP: $$(kubectl get svc argocd-server -n argocd -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"
+	@echo "URL: https://$$(kubectl get svc argocd-server -n argocd -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"
+	@echo "Username: admin"
+	@echo "Password: $$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)"
+	@echo "=================================="
+
+argocd-login-cli:
+	@echo "Logging into ArgoCD CLI..."
+	@ARGOCD_SERVER=$$(kubectl get svc argocd-server -n argocd -o jsonpath='{.status.loadBalancer.ingress[0].ip}') && \
+	ARGOCD_PASSWORD=$$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d) && \
+	argocd login $$ARGOCD_SERVER --username admin --password $$ARGOCD_PASSWORD --insecure
