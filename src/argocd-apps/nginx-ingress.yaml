@@ -4,7 +4,8 @@ metadata:
   name: nginx-ingress
   namespace: argocd
   annotations:
-    argocd.argoproj.io/refresh: normal  # Options: normal, hard
+    argocd.argoproj.io/refresh: normal
+    argocd.argoproj.io/sync-wave: "4"  # Deploy after secrets are ready  # Options: normal, hard
     # argocd.argoproj.io/sync-options: Timeout=60  # Custom timeout
   finalizers:
     - resources-finalizer.argocd.argoproj.io/background
