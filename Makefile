@@ -30,6 +30,7 @@ helm-update:
 
 NGINX_INGRESS_CONTROLLER_VERSION := 4.13.2
 
+# !!! No more used because its handled by argocd !!!
 helm-install-nginx-ingress: helm-update
 	@echo "Installing ingress-nginx resources with helm..."
 	helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
@@ -41,6 +42,7 @@ helm-install-nginx-ingress: helm-update
 
 CERT_MANAGER_VERSION := v1.18.2
 
+# !!! No more used because its handled by argocd !!!
 helm-install-cert-manager: helm-update
 	@echo "Installing cert-manager resources..."
 	helm repo add jetstack https://charts.jetstack.io
@@ -53,6 +55,7 @@ helm-install-cert-manager: helm-update
 	@echo "cert-manager resources deployed !!!"
 
 
+# !!! No more used because its handled by argocd !!!
 kube-apply:	connect-k8s-cluster helm-install-cert-manager helm-install-nginx-ingress
 	@echo "Waiting for cert-manager pods to be ready..."
 	kubectl wait --namespace cert-manager --for=condition=ready pod --selector=app.kubernetes.io/name=cert-manager --timeout=120s
@@ -63,11 +66,6 @@ kube-apply:	connect-k8s-cluster helm-install-cert-manager helm-install-nginx-ing
 	@sleep 60
 	@echo "Deploying ClusterIssuers..."
 	kubectl apply -f src/k8s-cluster/cert-manager/cluster-issuers.yaml
-	
-	@echo "Waiting for NGINX Ingress to be ready..."
-	kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=120s
-# 	@echo "Deploying ZenML..."
-# 	kubectl apply -f src/k8s-cluster/zenml/
 
 kube-cleanup:
 	kubectl delete -f src/k8s-cluster/
@@ -102,7 +100,7 @@ run-training: zenml-login
 
 
 ###############
-# ArgoCD
+# ArgoCD setup
 argocd-install: connect-k8s-cluster
 	@echo "Installing ArgoCD..."
 	kubectl create namespace argocd
@@ -139,3 +137,47 @@ argocd-login-cli:
 	@ARGOCD_SERVER=$$(kubectl get svc argocd-server -n argocd -o jsonpath='{.status.loadBalancer.ingress[0].ip}') && \
 	ARGOCD_PASSWORD=$$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d) && \
 	argocd login $$ARGOCD_SERVER --username admin --password $$ARGOCD_PASSWORD --insecure
+
+##############################
+# ArgoCD Applications
+
+argocd-app-external-secrets: connect-k8s-cluster
+	@echo "Deploying external-secrets-operator via ArgoCD..."
+	kubectl apply -f src/argocd-apps/external-secrets-operator.yaml
+
+argocd-app-nginx-ingress: connect-k8s-cluster
+	@echo "Deploying nginx-ingress via ArgoCD..."
+	kubectl apply -f src/argocd-apps/nginx-ingress.yaml
+
+argocd-app-cert-manager: connect-k8s-cluster
+	@echo "Deploying cert-manager via ArgoCD..."
+	kubectl apply -f src/argocd-apps/cert-manager.yaml
+
+argocd-app-cluster-issuers: connect-k8s-cluster
+	@echo "Deploying cluster-issuers via ArgoCD..."
+	kubectl apply -f src/argocd-apps/cluster-issuers.yaml
+
+argocd-app-zenml-external-secrets: connect-k8s-cluster
+	@echo "Deploying zenml-external-secrets via ArgoCD..."
+	kubectl apply -f src/argocd-apps/zenml-external-secrets.yaml
+
+argocd-app-zenml-server: connect-k8s-cluster
+	@echo "Deploying zenml-server via ArgoCD..."
+	kubectl apply -f src/argocd-apps/zenml-server.yaml
+
+argocd-apps-deploy-all: argocd-app-external-secrets argocd-app-cert-manager argocd-app-cluster-issuers argocd-app-zenml-external-secrets argocd-app-nginx-ingress argocd-app-zenml-server
+	@echo "All ArgoCD applications deployed with proper sync wave ordering!"
+
+# Helper target to create GCP secrets (run this once)
+gcp-create-zenml-secrets:
+	@echo "Creating GCP Secret Manager secrets for ZenML..."
+	@echo "You need to set these secrets in GCP Secret Manager:"
+	@echo "  gcloud secrets create zenml-database-url --data='your-database-url'"
+	@echo "  gcloud secrets create zenml-database-password --data='your-db-password'"
+	@echo "  gcloud secrets create zenml-default-username --data='admin'"
+	@echo "  gcloud secrets create zenml-default-password --data='your-admin-password'"
+	@echo ""
+	@echo "Make sure your service account has access to these secrets:"
+	@echo "  gcloud projects add-iam-policy-binding zenml-470505 \\"
+	@echo "    --member='serviceAccount:zenml-zenml@zenml-470505.iam.gserviceaccount.com' \\"
+	@echo "    --role='roles/secretmanager.secretAccessor'"

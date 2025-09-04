@@ -1,0 +1,45 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nginx-ingress
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/refresh: normal  # Options: normal, hard
+    # argocd.argoproj.io/sync-options: Timeout=60  # Custom timeout
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: default
+  source:
+    chart: ingress-nginx
+    repoURL: https://kubernetes.github.io/ingress-nginx
+    targetRevision: 4.13.2
+    helm:
+      releaseName: nginx-ingress
+      values: |
+        # Default values for nginx ingress controller
+        # You can override any values here if needed
+        controller:
+          service:
+            type: LoadBalancer
+          metrics:
+            enabled: true
+          podAnnotations:
+            prometheus.io/scrape: "true"
+            prometheus.io/port: "10254"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: nginx-ingress
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
