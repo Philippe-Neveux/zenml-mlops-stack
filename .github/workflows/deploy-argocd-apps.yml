@@ -1,0 +1,217 @@
+name: Deploy ArgoCD Applications
+
+on:
+  push:
+    branches:
+      - main
+      - argo-cd
+    paths:
+      - 'src/argocd-apps/**'
+      - 'src/k8s-cluster/**'
+      - 'src/zenml/**'
+      - '.github/workflows/deploy-argocd-apps.yml'
+  
+  workflow_dispatch:
+    inputs:
+      deploy_all:
+        description: 'Deploy all applications'
+        required: false
+        default: 'true'
+        type: boolean
+      apps_to_deploy:
+        description: 'Specific apps to deploy (comma-separated: external-secrets,cert-manager,cluster-issuers,zenml-external-secrets,nginx-ingress,zenml-server)'
+        required: false
+        default: 'all'
+        type: string
+
+env:
+  GCP_PROJECT_ID: zenml-470505
+  GKE_CLUSTER: zenml
+  GKE_ZONE: australia-southeast1
+
+jobs:
+  deploy-argocd-apps:
+    name: Deploy ArgoCD Applications
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      id-token: write  # Required for Workload Identity Federation
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
+      
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+      
+      - name: Configure kubectl
+        run: |
+          gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} \
+            --region ${{ env.GKE_ZONE }} \
+            --project ${{ env.GCP_PROJECT_ID }}
+      
+      - name: Verify ArgoCD is running
+        run: |
+          echo "Checking ArgoCD installation..."
+          kubectl get pods -n argocd -l app.kubernetes.io/name=argocd-server --no-headers | wc -l
+          if [ $(kubectl get pods -n argocd -l app.kubernetes.io/name=argocd-server --no-headers | wc -l) -eq 0 ]; then
+            echo "❌ ArgoCD not found. Please install ArgoCD first."
+            exit 1
+          fi
+          echo "✅ ArgoCD is running"
+      
+      - name: Deploy External Secrets Operator (Wave 0)
+        if: ${{ github.event.inputs.apps_to_deploy == 'all' || contains(github.event.inputs.apps_to_deploy, 'external-secrets') || github.event.inputs.deploy_all == 'true' }}
+        run: |
+          echo "🚀 Deploying External Secrets Operator..."
+          kubectl apply -f src/argocd-apps/external-secrets-operator.yaml
+          
+          echo "⏳ Waiting for External Secrets Operator to be ready..."
+          kubectl wait --namespace external-secrets-system \
+            --for=condition=ready pod \
+            --selector=app.kubernetes.io/name=external-secrets \
+            --timeout=300s
+          echo "✅ External Secrets Operator is ready"
+      
+      - name: Deploy cert-manager (Wave 1)
+        if: ${{ github.event.inputs.apps_to_deploy == 'all' || contains(github.event.inputs.apps_to_deploy, 'cert-manager') || github.event.inputs.deploy_all == 'true' }}
+        run: |
+          echo "🚀 Deploying cert-manager..."
+          kubectl apply -f src/argocd-apps/cert-manager.yaml
+          
+          echo "⏳ Waiting for cert-manager to be ready..."
+          kubectl wait --namespace cert-manager \
+            --for=condition=ready pod \
+            --selector=app.kubernetes.io/name=cert-manager \
+            --timeout=300s
+          kubectl wait --namespace cert-manager \
+            --for=condition=ready pod \
+            --selector=app.kubernetes.io/name=cainjector \
+            --timeout=300s
+          kubectl wait --namespace cert-manager \
+            --for=condition=ready pod \
+            --selector=app.kubernetes.io/name=webhook \
+            --timeout=300s
+          echo "✅ cert-manager is ready"
+      
+      - name: Deploy Wave 2 Applications (cluster-issuers & zenml-external-secrets)
+        if: ${{ github.event.inputs.apps_to_deploy == 'all' || contains(github.event.inputs.apps_to_deploy, 'cluster-issuers') || contains(github.event.inputs.apps_to_deploy, 'zenml-external-secrets') || github.event.inputs.deploy_all == 'true' }}
+        run: |
+          echo "🚀 Deploying Wave 2 applications..."
+          
+          # Deploy cluster-issuers
+          if [[ "${{ github.event.inputs.apps_to_deploy }}" == "all" || "${{ github.event.inputs.apps_to_deploy }}" == *"cluster-issuers"* || "${{ github.event.inputs.deploy_all }}" == "true" ]]; then
+            echo "📄 Deploying cluster-issuers..."
+            kubectl apply -f src/argocd-apps/cluster-issuers.yaml
+          fi
+          
+          # Deploy zenml-external-secrets
+          if [[ "${{ github.event.inputs.apps_to_deploy }}" == "all" || "${{ github.event.inputs.apps_to_deploy }}" == *"zenml-external-secrets"* || "${{ github.event.inputs.deploy_all }}" == "true" ]]; then
+            echo "🔐 Deploying zenml-external-secrets..."
+            kubectl apply -f src/argocd-apps/zenml-external-secrets.yaml
+            
+            echo "⏳ Waiting for external secrets to be ready..."
+            sleep 30  # Give time for ExternalSecret to sync
+            kubectl wait --namespace zenml \
+              --for=condition=Ready externalsecret \
+              zenml-secrets \
+              --timeout=300s || echo "⚠️ External secret not ready yet, but continuing..."
+          fi
+          
+          echo "✅ Wave 2 applications deployed"
+      
+      - name: Deploy nginx-ingress (Wave 3)
+        if: ${{ github.event.inputs.apps_to_deploy == 'all' || contains(github.event.inputs.apps_to_deploy, 'nginx-ingress') || github.event.inputs.deploy_all == 'true' }}
+        run: |
+          echo "🚀 Deploying nginx-ingress..."
+          kubectl apply -f src/argocd-apps/nginx-ingress.yaml
+          
+          echo "⏳ Waiting for nginx-ingress to be ready..."
+          kubectl wait --namespace nginx-ingress \
+            --for=condition=ready pod \
+            --selector=app.kubernetes.io/component=controller \
+            --timeout=300s
+          echo "✅ nginx-ingress is ready"
+      
+      - name: Deploy ZenML Server (Wave 4)
+        if: ${{ github.event.inputs.apps_to_deploy == 'all' || contains(github.event.inputs.apps_to_deploy, 'zenml-server') || github.event.inputs.deploy_all == 'true' }}
+        run: |
+          echo "🚀 Deploying ZenML Server..."
+          kubectl apply -f src/argocd-apps/zenml-server.yaml
+          
+          echo "⏳ Waiting for ZenML Server to be ready..."
+          kubectl wait --namespace zenml \
+            --for=condition=ready pod \
+            --selector=app.kubernetes.io/name=zenml \
+            --timeout=600s
+          echo "✅ ZenML Server is ready"
+      
+      - name: Verify All Applications
+        run: |
+          echo "🔍 Verifying all ArgoCD applications..."
+          echo ""
+          echo "ArgoCD Applications Status:"
+          kubectl get applications -n argocd -o wide
+          echo ""
+          echo "Pod Status by Namespace:"
+          for ns in external-secrets-system cert-manager nginx-ingress zenml; do
+            if kubectl get namespace $ns >/dev/null 2>&1; then
+              echo "📦 Namespace: $ns"
+              kubectl get pods -n $ns -o wide
+              echo ""
+            fi
+          done
+      
+      - name: Get Application URLs
+        run: |
+          echo "🌐 Application Access Information:"
+          echo ""
+          
+          # ZenML URL
+          if kubectl get ingress -n zenml zenml-server >/dev/null 2>&1; then
+            ZENML_URL=$(kubectl get ingress zenml-server -n zenml -o jsonpath='{.spec.rules[0].host}')
+            echo "🤖 ZenML Server: https://$ZENML_URL"
+          fi
+          
+          # ArgoCD URL  
+          if kubectl get svc argocd-server -n argocd >/dev/null 2>&1; then
+            ARGOCD_TYPE=$(kubectl get svc argocd-server -n argocd -o jsonpath='{.spec.type}')
+            if [ "$ARGOCD_TYPE" = "LoadBalancer" ]; then
+              ARGOCD_IP=$(kubectl get svc argocd-server -n argocd -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+              echo "🔧 ArgoCD: https://$ARGOCD_IP"
+            else
+              echo "🔧 ArgoCD: kubectl port-forward svc/argocd-server -n argocd 8080:443"
+            fi
+          fi
+          
+          echo ""
+          echo "🎉 Deployment completed successfully!"
+
+  notify-status:
+    name: Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: deploy-argocd-apps
+    if: always()
+    
+    steps:
+      - name: Deployment Success
+        if: needs.deploy-argocd-apps.result == 'success'
+        run: |
+          echo "✅ All ArgoCD applications deployed successfully!"
+          echo "Check your applications at: https://your-argocd-url.com"
+      
+      - name: Deployment Failed
+        if: needs.deploy-argocd-apps.result == 'failure'
+        run: |
+          echo "❌ Deployment failed. Please check the logs above."
+          exit 1

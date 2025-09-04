@@ -1,0 +1,55 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: zenml-server
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/refresh: normal
+    argocd.argoproj.io/sync-wave: "4"  # Deploy after external secrets are ready
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Philippe-Neveux/zenml-mlops-stack.git
+    targetRevision: HEAD
+    path: src/zenml
+    helm:
+      releaseName: zenml-server
+      valueFiles:
+        - custom-values-git-safe.yaml
+      # You can override specific values here if needed
+      values: |
+        # Additional or override values can be placed here
+        # These will be merged with custom-values-git-safe.yaml
+        
+        # Example: Override image tag if needed
+        # zenml:
+        #   image:
+        #     tag: "0.84.3"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: zenml
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  # Ignore differences in certain fields that may change frequently
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
+    - group: ""
+      kind: Secret
+      jsonPointers:
+        - /data
