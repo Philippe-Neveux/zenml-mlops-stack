@@ -220,9 +220,9 @@ output "zenml_deployment_info" {
 
     # Artifact Store Configuration
     artifact_store = {
-      type                  = "gcp"
-      path                  = "gs://${module.storage.bucket_name}"
-      project_id            = var.project_id
+      type       = "gcp"
+      path       = "gs://${module.storage.bucket_name}"
+      project_id = var.project_id
     }
   }
   sensitive = true
@@ -254,6 +254,27 @@ output "quick_commands" {
 output "storage_bucket_url" {
   description = "URL of the ZenML artifacts storage bucket"
   value       = module.storage.bucket_url
+}
+
+# Artifact Registry Outputs
+output "artifact_registry_repository_id" {
+  description = "ID of the artifact registry repository"
+  value       = module.artifact_registry.repository_id
+}
+
+output "artifact_registry_repository_name" {
+  description = "Full name of the artifact registry repository"
+  value       = module.artifact_registry.repository_name
+}
+
+output "artifact_registry_repository_url" {
+  description = "URL of the artifact registry repository for pushing/pulling images"
+  value       = module.artifact_registry.repository_url
+}
+
+output "artifact_registry_location" {
+  description = "Location of the artifact registry repository"
+  value       = module.artifact_registry.location
 }
 
 

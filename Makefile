@@ -1,3 +1,7 @@
+tf-format:
+	echo "Formatting Terraform files..."
+	cd src/infra && terraform fmt -recursive
+
 tf-init:
 	echo "Initializing Terraform..."
 	cd src/infra && terraform init
@@ -6,7 +10,7 @@ tf-validate: tf-init
 	echo "Validating Terraform configuration..."
 	cd src/infra && terraform validate
 
-tf-plan: tf-init tf-validate
+tf-plan: tf-format tf-init tf-validate
 	echo "Planning Terraform changes..."
 	cd src/infra && terraform plan -out tfplan
 
@@ -74,7 +78,7 @@ kube-cleanup:
 ###############
 # ZenML Setup
 ZENML_VERSION := 0.84.3
-
+GCP_PROJECT_ID := zenml-470505
 # !!! No more used because its handled by argocd !!!
 zenml-get-helm-chart:
 	@echo "Getting ZenML Helm chart..."
@@ -103,6 +107,12 @@ zenml-register-artifact-store: zenml-login
 	@echo "Registering GCS artifact store in ZenML..."
 	uv run zenml artifact-store register gs_store -f gcp --path=gs://$(BUCKET_NAME)
 
+ARTIFACT_REGISTRY_NAME := zenml-zenml-artifacts
+zenml-register-artifact-store: zenml-login
+	@echo "Registering GCP artifact registry in ZenML..."
+	uv run zenml container-registry register $(ARTIFACT_REGISTRY_NAME) \
+    --flavor=gcp \
+    --uri=australia-southeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/$(ARTIFACT_REGISTRY_NAME)
 
 zenml-configure-mlops-stack: zenml-login
 	@echo "Configure MLOps stack with each component ..."

@@ -60,7 +60,8 @@ module "project_services" {
     "sqladmin.googleapis.com",
     "servicenetworking.googleapis.com",
     "dns.googleapis.com",
-    "storage.googleapis.com"
+    "storage.googleapis.com",
+    "artifactregistry.googleapis.com"
   ]
 }
 
@@ -136,6 +137,22 @@ module "mysql" {
 # Storage Module for ZenML Artifacts
 module "storage" {
   source = "./modules/storage"
+
+  project_name = var.project_name
+  project_id   = var.project_id
+  region       = var.region
+
+  # Use the existing ZenML service account from the security module
+  zenml_service_account_email = module.security.zenml_service_account_email
+
+  labels = var.common_labels
+
+  depends_on = [module.project_services, module.security]
+}
+
+# Artifact Registry Module for Docker Images
+module "artifact_registry" {
+  source = "./modules/artifact-registry"
 
   project_name = var.project_name
   project_id   = var.project_id
