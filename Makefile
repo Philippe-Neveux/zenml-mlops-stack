@@ -157,6 +157,10 @@ argocd-app-cluster-issuers: connect-k8s-cluster
 	@echo "Deploying cluster-issuers via ArgoCD..."
 	kubectl apply -f src/argocd-apps/cluster-issuers.yaml
 
+argocd-app-zenml-secret-store: connect-k8s-cluster
+	@echo "Deploying zenml-secret-store via ArgoCD..."
+	kubectl apply -f src/argocd-apps/zenml-secret-store.yaml
+
 argocd-app-zenml-external-secrets: connect-k8s-cluster
 	@echo "Deploying zenml-external-secrets via ArgoCD..."
 	kubectl apply -f src/argocd-apps/zenml-external-secrets.yaml
@@ -165,19 +169,9 @@ argocd-app-zenml-server: connect-k8s-cluster
 	@echo "Deploying zenml-server via ArgoCD..."
 	kubectl apply -f src/argocd-apps/zenml-server.yaml
 
-argocd-apps-deploy-all: argocd-app-external-secrets argocd-app-cert-manager argocd-app-cluster-issuers argocd-app-zenml-external-secrets argocd-app-nginx-ingress argocd-app-zenml-server
+argocd-apps-deploy-all: argocd-app-external-secrets argocd-app-zenml-secret-store argocd-app-cert-manager argocd-app-cluster-issuers argocd-app-zenml-external-secrets argocd-app-nginx-ingress argocd-app-zenml-server
 	@echo "All ArgoCD applications deployed with proper sync wave ordering!"
 
-# Helper target to create GCP secrets (run this once)
-gcp-create-zenml-secrets:
-	@echo "Creating GCP Secret Manager secrets for ZenML..."
-	@echo "You need to set these secrets in GCP Secret Manager:"
-	@echo "  gcloud secrets create zenml-database-url --data='your-database-url'"
-	@echo "  gcloud secrets create zenml-database-password --data='your-db-password'"
-	@echo "  gcloud secrets create zenml-default-username --data='admin'"
-	@echo "  gcloud secrets create zenml-default-password --data='your-admin-password'"
-	@echo ""
-	@echo "Make sure your service account has access to these secrets:"
-	@echo "  gcloud projects add-iam-policy-binding zenml-470505 \\"
-	@echo "    --member='serviceAccount:zenml-zenml@zenml-470505.iam.gserviceaccount.com' \\"
-	@echo "    --role='roles/secretmanager.secretAccessor'"
+check-gcp-secrets:
+	@echo "🔍 Checking GCP Secret Manager secrets..."
+	gcloud secrets list | grep zenml || echo "No zenml secrets found in GCP Secret Manager"

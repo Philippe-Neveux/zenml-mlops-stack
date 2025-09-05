@@ -5,7 +5,7 @@ metadata:
   namespace: argocd
   annotations:
     argocd.argoproj.io/refresh: normal
-    argocd.argoproj.io/sync-wave: "1"  # Deploy before cluster-issuers (wave 2)
+    argocd.argoproj.io/sync-wave: "2"  # Deploy after secret-store (wave 1)
   finalizers:
     - resources-finalizer.argocd.argoproj.io/background
 spec:
