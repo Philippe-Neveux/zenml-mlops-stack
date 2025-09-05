@@ -17,11 +17,11 @@ spec:
     helm:
       releaseName: zenml-server
       valueFiles:
-        - custom-values-git-safe.yaml
+        - custom-values.yaml
       # You can override specific values here if needed
       values: |
         # Additional or override values can be placed here
-        # These will be merged with custom-values-git-safe.yaml
+        # These will be merged with custom-values.yaml
         
         # Example: Override image tag if needed
         # zenml:
