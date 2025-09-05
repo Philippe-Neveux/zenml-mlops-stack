@@ -59,10 +59,10 @@ output "zenml_database_url" {
 output "zenml_database_connection_info" {
   description = "ZenML database connection information"
   value = {
-    host     = google_sql_database_instance.zenml_mysql.private_ip_address
-    port     = 3306
-    database = google_sql_database.zenml.name
-    username = google_sql_user.zenml.name
+    host                     = google_sql_database_instance.zenml_mysql.private_ip_address
+    port                     = 3306
+    database                 = google_sql_database.zenml.name
+    username                 = google_sql_user.zenml.name
     instance_connection_name = google_sql_database_instance.zenml_mysql.connection_name
   }
   sensitive = false
@@ -71,12 +71,12 @@ output "zenml_database_connection_info" {
 output "zenml_database_connection_info_sensitive" {
   description = "ZenML database connection information including password"
   value = {
-    host     = google_sql_database_instance.zenml_mysql.private_ip_address
-    port     = 3306
-    database = google_sql_database.zenml.name
-    username = google_sql_user.zenml.name
-    password = random_password.zenml_db_password.result
-    url      = "mysql://${google_sql_user.zenml.name}:${random_password.zenml_db_password.result}@${google_sql_database_instance.zenml_mysql.private_ip_address}:3306/${google_sql_database.zenml.name}"
+    host                     = google_sql_database_instance.zenml_mysql.private_ip_address
+    port                     = 3306
+    database                 = google_sql_database.zenml.name
+    username                 = google_sql_user.zenml.name
+    password                 = random_password.zenml_db_password.result
+    url                      = "mysql://${google_sql_user.zenml.name}:${random_password.zenml_db_password.result}@${google_sql_database_instance.zenml_mysql.private_ip_address}:3306/${google_sql_database.zenml.name}"
     instance_connection_name = google_sql_database_instance.zenml_mysql.connection_name
   }
   sensitive = true
@@ -90,7 +90,7 @@ output "zenml_helm_database_config" {
     port     = "3306"
     database = google_sql_database.zenml.name
     username = google_sql_user.zenml.name
-    sslMode  = "PREFERRED"  # ZenML Helm chart expects this format
+    sslMode  = "PREFERRED" # ZenML Helm chart expects this format
   }
   sensitive = false
 }
@@ -98,8 +98,8 @@ output "zenml_helm_database_config" {
 output "zenml_database_secret_refs" {
   description = "Secret Manager references for ZenML Helm chart external secrets"
   value = {
-    password_secret_name    = google_secret_manager_secret.zenml_db_password.secret_id
-    connection_secret_name  = google_secret_manager_secret.zenml_db_connection.secret_id
+    password_secret_name   = google_secret_manager_secret.zenml_db_password.secret_id
+    connection_secret_name = google_secret_manager_secret.zenml_db_connection.secret_id
   }
 }
 
@@ -107,9 +107,9 @@ output "zenml_database_secret_refs" {
 output "mysql_connectivity_info" {
   description = "Information for verifying MySQL connectivity from Kubernetes"
   value = {
-    private_ip_address = google_sql_database_instance.zenml_mysql.private_ip_address
-    network_name      = regex("projects/[^/]+/global/networks/(.+)", var.private_network_id)[0]
-    firewall_rules    = length(var.gke_cluster_subnet_cidrs) > 0 ? [google_compute_firewall.mysql_access_from_gke[0].name] : []
+    private_ip_address      = google_sql_database_instance.zenml_mysql.private_ip_address
+    network_name            = regex("projects/[^/]+/global/networks/(.+)", var.private_network_id)[0]
+    firewall_rules          = length(var.gke_cluster_subnet_cidrs) > 0 ? [google_compute_firewall.mysql_access_from_gke[0].name] : []
     connection_test_command = "kubectl run mysql-test --image=mysql:8.0 --rm -it --restart=Never -- mysql -h ${google_sql_database_instance.zenml_mysql.private_ip_address} -u ${google_sql_user.zenml.name} -p${random_password.zenml_db_password.result} ${google_sql_database.zenml.name}"
   }
   sensitive = true
@@ -119,10 +119,10 @@ output "mysql_network_diagnostics" {
   description = "Network diagnostics information for troubleshooting connectivity"
   value = {
     mysql_private_ip = google_sql_database_instance.zenml_mysql.private_ip_address
-    mysql_port      = 3306
-    vpc_network     = var.private_network_id
+    mysql_port       = 3306
+    vpc_network      = var.private_network_id
     authorized_cidrs = var.gke_cluster_subnet_cidrs
-    ssl_mode        = var.ssl_mode
+    ssl_mode         = var.ssl_mode
   }
   sensitive = false
 }

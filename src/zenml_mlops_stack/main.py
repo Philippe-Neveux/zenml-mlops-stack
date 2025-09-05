@@ -1,6 +1,6 @@
 from zenml import pipeline, step
-
 from zenml.config import DockerSettings, PythonPackageInstaller
+
 docker_settings = DockerSettings(python_package_installer=PythonPackageInstaller.UV)
 
 

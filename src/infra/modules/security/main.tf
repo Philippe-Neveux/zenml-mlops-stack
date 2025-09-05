@@ -96,7 +96,7 @@ resource "google_project_iam_custom_role" "zenml_secrets_store_creator" {
   description = "Allow the ZenML Server to create new secrets"
   stage       = "GA"
   project     = var.project_id
-  
+
   permissions = [
     "secretmanager.secrets.create"
   ]
@@ -108,7 +108,7 @@ resource "google_project_iam_custom_role" "zenml_secrets_store_editor" {
   description = "Allow the ZenML Server to manage its secrets"
   stage       = "GA"
   project     = var.project_id
-  
+
   permissions = [
     "secretmanager.secrets.get",
     "secretmanager.secrets.update",
@@ -137,7 +137,7 @@ resource "google_project_iam_member" "zenml_secrets_store_editor" {
   project = var.project_id
   role    = google_project_iam_custom_role.zenml_secrets_store_editor.id
   member  = "serviceAccount:${google_service_account.zenml.email}"
-  
+
   condition {
     title       = "limit_access_zenml"
     description = "Limit access to secrets with prefix zenml-"

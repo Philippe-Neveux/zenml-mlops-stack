@@ -11,3 +11,8 @@ dependencies = [
     "scikit-learn>=1.7.1",
     "zenml[server]==0.84.3",
 ]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.12.12",
+]

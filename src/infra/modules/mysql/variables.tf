@@ -80,11 +80,11 @@ variable "ssl_mode" {
   description = "SSL mode for database connections. Options: ALLOW_UNENCRYPTED_AND_ENCRYPTED, ENCRYPTED_ONLY, TRUSTED_CLIENT_CERTIFICATE_REQUIRED"
   type        = string
   default     = "ENCRYPTED_ONLY"
-  
+
   validation {
     condition = contains([
       "ALLOW_UNENCRYPTED_AND_ENCRYPTED",
-      "ENCRYPTED_ONLY", 
+      "ENCRYPTED_ONLY",
       "TRUSTED_CLIENT_CERTIFICATE_REQUIRED"
     ], var.ssl_mode)
     error_message = "SSL mode must be one of: ALLOW_UNENCRYPTED_AND_ENCRYPTED, ENCRYPTED_ONLY, TRUSTED_CLIENT_CERTIFICATE_REQUIRED."
@@ -97,7 +97,12 @@ variable "authorized_networks" {
     name  = string
     value = string
   }))
-  default = []
+  default = [
+    {
+      name  = "admin-access"
+      value = "27.252.155.42/32" # Your current public IP
+    }
+  ]
 }
 # Database Configuration
 variable "zenml_database_name" {
@@ -125,7 +130,7 @@ variable "database_flags" {
     },
     {
       name  = "innodb_log_file_size"
-      value = "268435456"  # 256MB
+      value = "268435456" # 256MB
     },
     {
       name  = "sql_mode"
@@ -137,7 +142,7 @@ variable "database_flags" {
     },
     {
       name  = "innodb_flush_log_at_trx_commit"
-      value = "1"  # ACID compliance for ZenML metadata integrity
+      value = "1" # ACID compliance for ZenML metadata integrity
     },
     {
       name  = "slow_query_log"
@@ -145,7 +150,7 @@ variable "database_flags" {
     },
     {
       name  = "long_query_time"
-      value = "2"  # Log queries taking longer than 2 seconds
+      value = "2" # Log queries taking longer than 2 seconds
     }
   ]
 }

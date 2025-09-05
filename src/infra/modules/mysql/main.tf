@@ -24,12 +24,12 @@ resource "google_sql_database_instance" "zenml_mysql" {
   deletion_protection = var.deletion_protection
 
   settings {
-    tier                        = var.mysql_tier
-    availability_type           = var.availability_type
-    disk_type                   = var.disk_type
-    disk_size                   = var.disk_size
-    disk_autoresize            = var.disk_autoresize
-    disk_autoresize_limit      = var.disk_autoresize_limit
+    tier                  = var.mysql_tier
+    availability_type     = var.availability_type
+    disk_type             = var.disk_type
+    disk_size             = var.disk_size
+    disk_autoresize       = var.disk_autoresize
+    disk_autoresize_limit = var.disk_autoresize_limit
 
     # IP configuration
     ip_configuration {
@@ -37,7 +37,7 @@ resource "google_sql_database_instance" "zenml_mysql" {
       private_network                               = var.private_network_id
       enable_private_path_for_google_cloud_services = true
       ssl_mode                                      = var.ssl_mode
-      
+
       # Authorized networks (if public IP is enabled)
       dynamic "authorized_networks" {
         for_each = var.authorized_networks
@@ -72,7 +72,7 @@ resource "google_sql_database" "zenml" {
   name     = var.zenml_database_name
   instance = google_sql_database_instance.zenml_mysql.name
   project  = var.project_id
-  
+
   charset   = "utf8mb4"
   collation = "utf8mb4_unicode_ci"
 }
@@ -99,7 +99,7 @@ resource "google_sql_user" "zenml_external" {
   instance = google_sql_database_instance.zenml_mysql.name
   project  = var.project_id
   password = random_password.zenml_db_password.result
-  host     = "%"  # Allow connections from any host (restricted by authorized_networks)
+  host     = "%" # Allow connections from any host (restricted by authorized_networks)
 }
 
 # Store database credentials in Secret Manager
@@ -160,7 +160,7 @@ resource "google_secret_manager_secret" "zenml_db_connection" {
 }
 
 resource "google_secret_manager_secret_version" "zenml_db_connection" {
-  secret      = google_secret_manager_secret.zenml_db_connection.id
+  secret = google_secret_manager_secret.zenml_db_connection.id
   secret_data = jsonencode({
     host     = google_sql_database_instance.zenml_mysql.private_ip_address
     port     = 3306

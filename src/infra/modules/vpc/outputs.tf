@@ -104,9 +104,9 @@ output "services_cidr" {
 output "subnet_cidrs" {
   description = "Map of all subnet CIDR blocks"
   value = {
-    gke_nodes_subnet = google_compute_subnetwork.gke_nodes_subnet.ip_cidr_range
-    pods            = google_compute_subnetwork.gke_nodes_subnet.secondary_ip_range[0].ip_cidr_range
-    services        = google_compute_subnetwork.gke_nodes_subnet.secondary_ip_range[1].ip_cidr_range
+    gke_nodes_subnet  = google_compute_subnetwork.gke_nodes_subnet.ip_cidr_range
+    pods              = google_compute_subnetwork.gke_nodes_subnet.secondary_ip_range[0].ip_cidr_range
+    services          = google_compute_subnetwork.gke_nodes_subnet.secondary_ip_range[1].ip_cidr_range
     non_gke_workloads = google_compute_subnetwork.non_gke_workloads_subnet.ip_cidr_range
   }
 }

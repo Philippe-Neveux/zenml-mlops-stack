@@ -107,7 +107,7 @@ resource "google_compute_firewall" "allow_ssh" {
   }
 
   source_ranges = [
-    "35.235.240.0/20"  # Google Cloud Console IP range
+    "35.235.240.0/20" # Google Cloud Console IP range
   ]
   target_tags = ["ssh"]
 

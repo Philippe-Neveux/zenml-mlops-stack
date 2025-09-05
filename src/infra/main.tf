@@ -33,7 +33,7 @@ data "google_container_cluster" "cluster" {
   name     = module.gke.cluster_name
   location = var.region
   project  = var.project_id
-  
+
   depends_on = [module.gke]
 }
 
@@ -49,7 +49,7 @@ module "project_services" {
   source  = "terraform-google-modules/project-factory/google//modules/project_services"
   version = "~> 18.0"
 
-  project_id                  = var.project_id
+  project_id = var.project_id
 
   activate_apis = [
     "compute.googleapis.com",
@@ -59,7 +59,8 @@ module "project_services" {
     "cloudkms.googleapis.com",
     "sqladmin.googleapis.com",
     "servicenetworking.googleapis.com",
-    "dns.googleapis.com"
+    "dns.googleapis.com",
+    "storage.googleapis.com"
   ]
 }
 
@@ -103,7 +104,7 @@ module "security" {
   project_id   = var.project_id
   region       = var.region
 
-  network_name                = module.vpc.network_name
+  network_name = module.vpc.network_name
 
   labels = var.common_labels
 
@@ -127,16 +128,23 @@ module "mysql" {
     module.vpc.services_cidr
   ]
 
-  # Enable public IP with authorized networks for secure internet access
-  public_ip_enabled = true
-  authorized_networks = [
-    {
-      name  = "admin-access"
-      value = "118.149.85.5/32"  # Your current public IP
-    }
-  ]
-
   labels = var.common_labels
 
   depends_on = [module.vpc, module.project_services]
+}
+
+# Storage Module for ZenML Artifacts
+module "storage" {
+  source = "./modules/storage"
+
+  project_name = var.project_name
+  project_id   = var.project_id
+  region       = var.region
+
+  # Use the existing ZenML service account from the security module
+  zenml_service_account_email = module.security.zenml_service_account_email
+
+  labels = var.common_labels
+
+  depends_on = [module.project_services, module.security]
 }

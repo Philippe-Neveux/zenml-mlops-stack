@@ -125,8 +125,8 @@ output "zenml_database_url" {
 output "zenml_database_secret_ids" {
   description = "Secret Manager secret IDs for database credentials"
   value = {
-    password_secret_id    = module.mysql.zenml_database_password_secret_id
-    connection_secret_id  = module.mysql.zenml_db_connection_secret_id
+    password_secret_id      = module.mysql.zenml_database_password_secret_id
+    connection_secret_id    = module.mysql.zenml_db_connection_secret_id
     root_password_secret_id = module.mysql.mysql_root_password_secret_id
   }
 }
@@ -180,7 +180,7 @@ output "zenml_secret_manager_config" {
   value = {
     project_id            = var.project_id
     service_account_email = module.security.zenml_service_account_email
-    region               = var.region
+    region                = var.region
   }
 }
 
@@ -192,7 +192,7 @@ output "zenml_deployment_info" {
     project_id   = var.project_id
     project_name = var.project_name
     region       = var.region
-    
+
     # Database Configuration
     database = {
       host     = module.mysql.mysql_instance_private_ip
@@ -201,21 +201,28 @@ output "zenml_deployment_info" {
       username = module.mysql.zenml_database_username
       ssl_mode = "PREFERRED"
     }
-    
+
     # Secret Manager
     secret_manager = {
-      project_id            = var.project_id
-      service_account_email = module.security.zenml_service_account_email
-      password_secret_name  = module.mysql.zenml_database_password_secret_id
+      project_id             = var.project_id
+      service_account_email  = module.security.zenml_service_account_email
+      password_secret_name   = module.mysql.zenml_database_password_secret_id
       connection_secret_name = module.mysql.zenml_db_connection_secret_id
     }
-    
+
     # Kubernetes Configuration
     kubernetes = {
       cluster_name     = module.gke.cluster_name
       cluster_endpoint = module.gke.cluster_endpoint
-      region          = var.region
-      service_account = module.security.zenml_service_account_email
+      region           = var.region
+      service_account  = module.security.zenml_service_account_email
+    }
+
+    # Artifact Store Configuration
+    artifact_store = {
+      type                  = "gcp"
+      path                  = "gs://${module.storage.bucket_name}"
+      project_id            = var.project_id
     }
   }
   sensitive = true
@@ -236,10 +243,17 @@ output "vpc_subnet_cidrs" {
 output "quick_commands" {
   description = "Quick commands for accessing and managing the infrastructure"
   value = {
-    configure_kubectl    = "gcloud container clusters get-credentials ${module.gke.cluster_name} --region ${var.region} --project ${var.project_id}"
-    get_mysql_password   = "gcloud secrets versions access latest --secret='${module.mysql.zenml_database_password_secret_id}' --project='${var.project_id}'"
+    configure_kubectl     = "gcloud container clusters get-credentials ${module.gke.cluster_name} --region ${var.region} --project ${var.project_id}"
+    get_mysql_password    = "gcloud secrets versions access latest --secret='${module.mysql.zenml_database_password_secret_id}' --project='${var.project_id}'"
     test_mysql_connection = "kubectl run mysql-test --image=mysql:8.0 --rm -it --restart=Never -- mysql -h ${module.mysql.mysql_instance_private_ip} -u ${module.mysql.zenml_database_username} -p${module.mysql.zenml_database_name}"
-    list_secrets         = "gcloud secrets list --filter='name~zenml' --project='${var.project_id}'"
+    list_secrets          = "gcloud secrets list --filter='name~zenml' --project='${var.project_id}'"
+    access_storage_bucket = "gsutil ls gs://${module.storage.bucket_name}"
   }
 }
+
+output "storage_bucket_url" {
+  description = "URL of the ZenML artifacts storage bucket"
+  value       = module.storage.bucket_url
+}
+
 

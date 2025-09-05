@@ -1,14 +1,17 @@
-from typing import Annotated
-from typing import Tuple
+import logging
+from typing import Annotated, Tuple
+
 import pandas as pd
+from sklearn.base import ClassifierMixin
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
-from sklearn.base import ClassifierMixin
 from sklearn.svm import SVC
 
-from zenml import pipeline, step, Model
+from zenml import Model, pipeline, step
+from zenml.config import DockerSettings
 
-import logging
+docker_settings = DockerSettings(python_package_installer="uv")
+
 
 @step
 def training_data_loader() -> Tuple[
