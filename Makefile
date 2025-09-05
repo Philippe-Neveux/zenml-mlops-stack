@@ -72,13 +72,15 @@ kube-cleanup:
 
 
 ###############
-# ZenML
+# ZenML Setup
 ZENML_VERSION := 0.84.3
 
+# !!! No more used because its handled by argocd !!!
 zenml-get-helm-chart:
 	@echo "Getting ZenML Helm chart..."
 	cd src/ && helm pull oci://public.ecr.aws/zenml/zenml --version $(ZENML_VERSION) --untar
 
+# !!! No more used because its handled by argocd !!!
 zenml-deploy:
 	cd src/zenml && helm -n zenml install zenml-server . \
 		--create-namespace \
@@ -87,6 +89,27 @@ zenml-deploy:
 zenml-login:
 	@echo "Logging into ZenML..."
 	uv run zenml login https://zenml.34.40.173.65.nip.io
+
+
+CODE_REPO_PATH :=  https://github.com/Philippe-Neveux/zenml-mlops-stack
+zenml-register-code-repository: zenml-login
+	@echo "Registering code repository in ZenML..."
+	uv run zenml code-repository register Github_Repo \
+		-t github \
+		-s $(CODE_REPO_PATH)
+
+BUCKET_NAME := zenml-zenml-artifacts
+zenml-register-artifact-store: zenml-login
+	@echo "Registering GCS artifact store in ZenML..."
+	uv run zenml artifact-store register gs_store -f gcp --path=gs://$(BUCKET_NAME)
+
+
+zenml-configure-mlops-stack: zenml-login
+	@echo "Configure MLOps stack with each component ..."
+	uv run zenml stack register mlops_stack \
+		-a gs_store \
+		-o default \
+		--set
 
 ###############
 # Run pipelines

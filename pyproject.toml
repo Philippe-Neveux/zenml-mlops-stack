@@ -5,6 +5,8 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "gcsfs>=2025.9.0",
+    "google-cloud-storage>=3.3.1",
     "pandas>=2.3.2",
     "pip>=25.2",
     "pyarrow>=21.0.0",
@@ -14,5 +16,6 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "pygithub>=2.8.1",
     "ruff>=0.12.12",
 ]
