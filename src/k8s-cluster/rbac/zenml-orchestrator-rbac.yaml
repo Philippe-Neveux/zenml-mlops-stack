@@ -12,3 +12,62 @@ metadata:
     app.kubernetes.io/name: zenml
     app.kubernetes.io/component: orchestrator
     app.kubernetes.io/part-of: zenml-mlops-stack
+---
+# RoleBinding to grant the zenml-service-account edit permissions
+# in the zenml namespace so it can create and manage orchestrator pods
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: zenml-orchestrator-edit
+  namespace: zenml
+  labels:
+    app.kubernetes.io/name: zenml
+    app.kubernetes.io/component: orchestrator
+    app.kubernetes.io/part-of: zenml-mlops-stack
+subjects:
+- kind: ServiceAccount
+  name: zenml-service-account
+  namespace: zenml
+roleRef:
+  kind: ClusterRole
+  name: edit
+  apiGroup: rbac.authorization.k8s.io
+---
+# Additional ClusterRole for cross-namespace operations if needed
+# This gives zenml-service-account permissions to list namespaces and pods across the cluster
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: zenml-orchestrator-cluster
+  labels:
+    app.kubernetes.io/name: zenml
+    app.kubernetes.io/component: orchestrator
+    app.kubernetes.io/part-of: zenml-mlops-stack
+rules:
+- apiGroups: [""]
+  resources: ["namespaces"]
+  verbs: ["get", "list"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["batch"]
+  resources: ["jobs"]
+  verbs: ["get", "list", "watch"]
+---
+# ClusterRoleBinding for the additional cluster-level permissions
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: zenml-orchestrator-cluster
+  labels:
+    app.kubernetes.io/name: zenml
+    app.kubernetes.io/component: orchestrator
+    app.kubernetes.io/part-of: zenml-mlops-stack
+subjects:
+- kind: ServiceAccount
+  name: zenml-service-account
+  namespace: zenml
+roleRef:
+  kind: ClusterRole
+  name: zenml-orchestrator-cluster
+  apiGroup: rbac.authorization.k8s.io
