@@ -157,9 +157,16 @@ resource "google_project_iam_member" "zenml_storage_admin" {
   member  = "serviceAccount:${google_service_account.zenml.email}"
 }
 
-# Workload Identity binding for ZenML
+# Workload Identity binding for ZenML server
 resource "google_service_account_iam_member" "zenml_workload_identity" {
   service_account_id = google_service_account.zenml.name
   role               = "roles/iam.workloadIdentityUser"
   member             = "serviceAccount:${var.project_id}.svc.id.goog[zenml/zenml-server]"
+}
+
+# Workload Identity binding for ZenML orchestrator service account
+resource "google_service_account_iam_member" "zenml_orchestrator_workload_identity" {
+  service_account_id = google_service_account.zenml.name
+  role               = "roles/iam.workloadIdentityUser"
+  member             = "serviceAccount:${var.project_id}.svc.id.goog[zenml/zenml-service-account]"
 }

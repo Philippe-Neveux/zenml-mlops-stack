@@ -25,7 +25,7 @@ def train_model(data: dict) -> None:
     print(f"Trained model using {len(data['features'])} data points. "
           f"Feature sum is {total_features}, label sum is {total_labels}")
 
-@pipeline
+@pipeline(settings={"docker": docker_settings})
 def simple_ml_pipeline():
     """Define a pipeline that connects the steps."""
     dataset = load_data()

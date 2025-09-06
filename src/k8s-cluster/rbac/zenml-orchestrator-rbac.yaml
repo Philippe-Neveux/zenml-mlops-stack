@@ -1,0 +1,14 @@
+---
+# Patch the zenml-service-account to add Workload Identity annotation
+# This allows the orchestrator pods to use the GCP service account
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: zenml-service-account
+  namespace: zenml
+  annotations:
+    iam.gke.io/gcp-service-account: zenml-zenml@zenml-470505.iam.gserviceaccount.com
+  labels:
+    app.kubernetes.io/name: zenml
+    app.kubernetes.io/component: orchestrator
+    app.kubernetes.io/part-of: zenml-mlops-stack

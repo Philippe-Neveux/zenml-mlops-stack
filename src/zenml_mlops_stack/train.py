@@ -12,6 +12,13 @@ from zenml.config import DockerSettings
 
 docker_settings = DockerSettings(python_package_installer="uv")
 
+from zenml.integrations.kubernetes.flavors.kubernetes_orchestrator_flavor import (
+    KubernetesOrchestratorSettings,
+)
+
+kubernetes_settings = KubernetesOrchestratorSettings(
+    service_account_name="zenml-server"
+)
 
 @step
 def training_data_loader() -> Tuple[
@@ -66,7 +73,13 @@ def svc_trainer(
     return model, train_acc
 
 
-@pipeline(model=model)
+@pipeline(
+    settings={
+        "docker": docker_settings,
+        "orchestrator": kubernetes_settings
+    },
+    model=model
+)
 def training_pipeline(gamma: float = 0.002):
     X_train, X_test, y_train, y_test = training_data_loader()
     svc_trainer(gamma=gamma, X_train=X_train, y_train=y_train)

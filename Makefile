@@ -107,30 +107,45 @@ zenml-register-artifact-store: zenml-login
 	@echo "Registering GCS artifact store in ZenML..."
 	uv run zenml artifact-store register gs_store -f gcp --path=gs://$(BUCKET_NAME)
 
-ARTIFACT_REGISTRY_NAME := zenml-zenml-artifacts
-zenml-register-artifact-store: zenml-login
+ARTIFACT_REGISTRY_NAME := zenml-artifact-registry
+zenml-register-artifact-registry: zenml-login
 	@echo "Registering GCP artifact registry in ZenML..."
 	uv run zenml container-registry register $(ARTIFACT_REGISTRY_NAME) \
     --flavor=gcp \
     --uri=australia-southeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/$(ARTIFACT_REGISTRY_NAME)
 
+
+KUBERNETES_CONTEXT := gke_zenml-470505_australia-southeast1_zenml
+zenml-register-orchestrator: zenml-login
+	@echo "Registering default orchestrator in ZenML..."
+	zenml orchestrator register kubernetes_orchestrator \
+		--flavor=kubernetes \
+		--kubernetes_context=$(KUBERNETES_CONTEXT)
+
 zenml-configure-mlops-stack: zenml-login
 	@echo "Configure MLOps stack with each component ..."
 	uv run zenml stack register mlops_stack \
 		-a gs_store \
-		-o default \
+		-c $(ARTIFACT_REGISTRY_NAME) \
+		-o kubernetes_orchestrator \
 		--set
+
+gcp-connect-to-artifact-registry: 
+	@echo "Connecting GCP to Artifact Registry..."
+	gcloud auth configure-docker australia-southeast1-docker.pkg.dev
 
 ###############
 # Run pipelines
-run-process: zenml-login
+run-process: zenml-login gcp-connect-to-artifact-registry
 	@echo "Running training pipeline..."
 	uv run src/zenml_mlops_stack/main.py
 
-run-training: zenml-login
+run-training: zenml-login gcp-connect-to-artifact-registry
 	@echo "Running training pipeline..."
 	uv run src/zenml_mlops_stack/train.py
 
+ruff:
+	ruff check src/zenml_mlops_stack --fix --select I
 
 ###############
 # ArgoCD setup

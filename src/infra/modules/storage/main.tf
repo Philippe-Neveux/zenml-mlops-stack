@@ -49,3 +49,9 @@ resource "google_storage_bucket_iam_member" "zenml_storage_admin" {
   role   = "roles/storage.objectAdmin"
   member = "serviceAccount:${var.zenml_service_account_email}"
 }
+
+resource "google_storage_bucket_iam_member" "zenml_storage_user" {
+  bucket = google_storage_bucket.zenml_artifacts.name
+  role   = "roles/storage.objectUser"
+  member = "serviceAccount:${var.zenml_service_account_email}"
+}
