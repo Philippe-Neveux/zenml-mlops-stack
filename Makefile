@@ -144,6 +144,10 @@ run-training: zenml-login gcp-connect-to-artifact-registry
 	@echo "Running training pipeline..."
 	uv run src/zenml_mlops_stack/train.py
 
+schedule-training: zenml-login
+	@echo "Scheduling training pipeline to run every day at midnight..."
+	uv run src/zenml_mlops_stack/schedule_pipeline.py
+
 ruff:
 	ruff check src/zenml_mlops_stack --fix --select I
 

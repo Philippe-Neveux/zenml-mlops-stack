@@ -2,3 +2,7 @@
 .zen/
 .DS_Store
 .vscode
+
+__pycache__
+*.pyc
+*-info/
