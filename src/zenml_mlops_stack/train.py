@@ -12,6 +12,24 @@ from zenml.config import DockerSettings
 
 docker_settings = DockerSettings(python_package_installer="uv")
 
+from zenml.integrations.kubernetes.flavors import KubernetesOrchestratorSettings
+from zenml.integrations.kubernetes.pod_settings import KubernetesPodSettings
+k8s_settings = KubernetesOrchestratorSettings(
+    orchestrator_pod_settings=KubernetesPodSettings(
+        resources={
+            "requests": {
+                "cpu": "1",
+                "memory": "2Gi"
+            },
+            "limits": {
+                "cpu": "2",
+                "memory": "4Gi"
+            }
+        }
+    ),
+    service_account_name="zenml-service-account"
+)
+
 @step
 def training_data_loader() -> Tuple[
     # Notice we use a Tuple and Annotated to return 
@@ -67,7 +85,8 @@ def svc_trainer(
 
 @pipeline(
     settings={
-        "docker": docker_settings
+        "docker": docker_settings,
+        "orchestrator": k8s_settings
     },
     model=model
 )

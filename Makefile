@@ -95,12 +95,13 @@ zenml-login:
 	uv run zenml login https://zenml.34.40.173.65.nip.io
 
 
-CODE_REPO_PATH :=  https://github.com/Philippe-Neveux/zenml-mlops-stack
 zenml-register-code-repository: zenml-login
 	@echo "Registering code repository in ZenML..."
 	uv run zenml code-repository register Github_Repo \
-		-t github \
-		-s $(CODE_REPO_PATH)
+		--type=github \
+		--owner=Philippe-Neveux \
+		--repository=zenml-mlops-stack
+
 
 BUCKET_NAME := zenml-zenml-artifacts
 zenml-register-artifact-store: zenml-login
