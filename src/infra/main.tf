@@ -145,6 +145,9 @@ module "storage" {
   # Use the existing ZenML service account from the security module
   zenml_service_account_email = module.security.zenml_service_account_email
 
+  # Use the MLflow service account from the security module
+  mlflow_service_account_email = module.security.mlflow_service_account_email
+
   labels = var.common_labels
 
   depends_on = [module.project_services, module.security]

@@ -117,6 +117,18 @@ variable "zenml_db_username" {
   default     = "zenml"
 }
 
+variable "mlflow_database_name" {
+  description = "Name of the MLflow database"
+  type        = string
+  default     = "mlflow"
+}
+
+variable "mlflow_db_username" {
+  description = "Username for MLflow database user"
+  type        = string
+  default     = "mlflow_user"
+}
+
 variable "database_flags" {
   description = "List of database flags for MySQL optimization"
   type = list(object({

@@ -131,6 +131,37 @@ output "zenml_database_secret_ids" {
   }
 }
 
+# MLflow Database Outputs
+output "mlflow_database_name" {
+  description = "Name of the MLflow database"
+  value       = module.mysql.mlflow_database_name
+}
+
+output "mlflow_database_username" {
+  description = "Username for MLflow database access"
+  value       = module.mysql.mlflow_database_username
+}
+
+output "mlflow_database_connection_info" {
+  description = "MLflow database connection information"
+  value       = module.mysql.mlflow_database_connection_info
+}
+
+output "mlflow_database_url" {
+  description = "Complete database URL for MLflow configuration"
+  value       = module.mysql.mlflow_database_url
+  sensitive   = true
+}
+
+output "mlflow_database_secret_ids" {
+  description = "Secret Manager secret IDs for MLflow database credentials"
+  value = {
+    user_secret_id       = module.mysql.mlflow_db_user_secret_id
+    password_secret_id   = module.mysql.mlflow_database_password_secret_id
+    connection_secret_id = module.mysql.mlflow_db_connection_secret_id
+  }
+}
+
 # Project Information
 output "project_id" {
   description = "Google Cloud Project ID"
@@ -254,6 +285,75 @@ output "quick_commands" {
 output "storage_bucket_url" {
   description = "URL of the ZenML artifacts storage bucket"
   value       = module.storage.bucket_url
+}
+
+# MLflow Storage Outputs
+output "mlflow_bucket_name" {
+  description = "Name of the MLflow artifacts storage bucket"
+  value       = module.storage.mlflow_bucket_name
+}
+
+output "mlflow_bucket_url" {
+  description = "URL of the MLflow artifacts storage bucket"
+  value       = module.storage.mlflow_bucket_url
+}
+
+output "mlflow_bucket_gs_uri" {
+  description = "GS URI of the MLflow artifacts storage bucket"
+  value       = module.storage.mlflow_bucket_gs_uri
+}
+
+# MLflow Service Account Outputs
+output "mlflow_service_account_email" {
+  description = "Email of the MLflow service account"
+  value       = module.security.mlflow_service_account_email
+}
+
+output "mlflow_service_account_name" {
+  description = "Name of the MLflow service account"
+  value       = module.security.mlflow_service_account_name
+}
+
+# MLflow Deployment Configuration
+output "mlflow_deployment_config" {
+  description = "Complete configuration for MLflow deployment"
+  value = {
+    # Database configuration
+    database = {
+      host     = module.mysql.mlflow_database_connection_info.host
+      port     = module.mysql.mlflow_database_connection_info.port
+      database = module.mysql.mlflow_database_connection_info.database
+      username = module.mysql.mlflow_database_connection_info.username
+      driver   = "pymysql"
+    }
+
+    # Storage configuration
+    storage = {
+      bucket_name = module.storage.mlflow_bucket_name
+      bucket_uri  = module.storage.mlflow_bucket_gs_uri
+    }
+
+    # Security configuration
+    service_account = {
+      email = module.security.mlflow_service_account_email
+      name  = module.security.mlflow_service_account_name
+    }
+
+    # Secret references
+    secrets = {
+      database_user_secret       = module.mysql.mlflow_database_secret_refs.user_secret_name
+      database_password_secret   = module.mysql.mlflow_database_secret_refs.password_secret_name
+      database_connection_secret = module.mysql.mlflow_database_secret_refs.connection_secret_name
+    }
+
+    # Infrastructure details
+    infrastructure = {
+      project_id                     = var.project_id
+      region                         = var.region
+      mysql_instance_connection_name = module.mysql.mysql_instance_connection_name
+    }
+  }
+  sensitive = false
 }
 
 # Artifact Registry Outputs

@@ -13,6 +13,12 @@ resource "random_password" "zenml_db_password" {
   special = true
 }
 
+# Random password for MLflow database user
+resource "random_password" "mlflow_db_password" {
+  length  = 32
+  special = true
+}
+
 # Cloud SQL MySQL Instance
 resource "google_sql_database_instance" "zenml_mysql" {
   name             = "${var.project_name}-mysql"
@@ -77,6 +83,16 @@ resource "google_sql_database" "zenml" {
   collation = "utf8mb4_unicode_ci"
 }
 
+# MLflow Database
+resource "google_sql_database" "mlflow" {
+  name     = var.mlflow_database_name
+  instance = google_sql_database_instance.zenml_mysql.name
+  project  = var.project_id
+
+  charset   = "utf8mb4"
+  collation = "utf8mb4_unicode_ci"
+}
+
 # Root MySQL user
 resource "google_sql_user" "root" {
   name     = "root"
@@ -99,6 +115,23 @@ resource "google_sql_user" "zenml_external" {
   instance = google_sql_database_instance.zenml_mysql.name
   project  = var.project_id
   password = random_password.zenml_db_password.result
+  host     = "%" # Allow connections from any host (restricted by authorized_networks)
+}
+
+# MLflow Database User
+resource "google_sql_user" "mlflow" {
+  name     = var.mlflow_db_username
+  instance = google_sql_database_instance.zenml_mysql.name
+  project  = var.project_id
+  password = random_password.mlflow_db_password.result
+}
+
+# MLflow Database User for external access (from authorized IPs)
+resource "google_sql_user" "mlflow_external" {
+  name     = var.mlflow_db_username
+  instance = google_sql_database_instance.zenml_mysql.name
+  project  = var.project_id
+  password = random_password.mlflow_db_password.result
   host     = "%" # Allow connections from any host (restricted by authorized_networks)
 }
 
@@ -143,6 +176,47 @@ resource "google_secret_manager_secret_version" "zenml_db_password" {
   secret_data = random_password.zenml_db_password.result
 }
 
+# Store MLflow database credentials in Secret Manager
+resource "google_secret_manager_secret" "mlflow_db_user" {
+  secret_id = "${var.project_name}-mlflow-db-user"
+  project   = var.project_id
+
+  replication {
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
+  }
+
+  labels = var.labels
+}
+
+resource "google_secret_manager_secret_version" "mlflow_db_user" {
+  secret      = google_secret_manager_secret.mlflow_db_user.id
+  secret_data = var.mlflow_db_username
+}
+
+resource "google_secret_manager_secret" "mlflow_db_password" {
+  secret_id = "${var.project_name}-mlflow-db-password"
+  project   = var.project_id
+
+  replication {
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
+  }
+
+  labels = var.labels
+}
+
+resource "google_secret_manager_secret_version" "mlflow_db_password" {
+  secret      = google_secret_manager_secret.mlflow_db_password.id
+  secret_data = random_password.mlflow_db_password.result
+}
+
 # Store complete ZenML database connection string
 resource "google_secret_manager_secret" "zenml_db_connection" {
   secret_id = "${var.project_name}-zenml-db-connection"
@@ -168,6 +242,34 @@ resource "google_secret_manager_secret_version" "zenml_db_connection" {
     username = google_sql_user.zenml.name
     password = random_password.zenml_db_password.result
     url      = "mysql://${google_sql_user.zenml.name}:${random_password.zenml_db_password.result}@${google_sql_database_instance.zenml_mysql.private_ip_address}:3306/${google_sql_database.zenml.name}"
+  })
+}
+
+# Store complete MLflow database connection string
+resource "google_secret_manager_secret" "mlflow_db_connection" {
+  secret_id = "${var.project_name}-mlflow-db-connection"
+  project   = var.project_id
+
+  replication {
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
+  }
+
+  labels = var.labels
+}
+
+resource "google_secret_manager_secret_version" "mlflow_db_connection" {
+  secret = google_secret_manager_secret.mlflow_db_connection.id
+  secret_data = jsonencode({
+    host     = google_sql_database_instance.zenml_mysql.private_ip_address
+    port     = 3306
+    database = google_sql_database.mlflow.name
+    username = google_sql_user.mlflow.name
+    password = random_password.mlflow_db_password.result
+    url      = "mysql+pymysql://${google_sql_user.mlflow.name}:${random_password.mlflow_db_password.result}@${google_sql_database_instance.zenml_mysql.private_ip_address}:3306/${google_sql_database.mlflow.name}"
   })
 }
 

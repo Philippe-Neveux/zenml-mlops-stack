@@ -51,3 +51,19 @@ output "zenml_service_account_key_id" {
   description = "Unique ID of the ZenML service account"
   value       = google_service_account.zenml.unique_id
 }
+
+# MLflow Service Account outputs
+output "mlflow_service_account_email" {
+  description = "Email of the MLflow service account for database and storage access"
+  value       = google_service_account.mlflow.email
+}
+
+output "mlflow_service_account_name" {
+  description = "Name of the MLflow service account"
+  value       = google_service_account.mlflow.name
+}
+
+output "mlflow_service_account_key_id" {
+  description = "Unique ID of the MLflow service account"
+  value       = google_service_account.mlflow.unique_id
+}

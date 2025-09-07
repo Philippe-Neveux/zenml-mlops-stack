@@ -170,3 +170,46 @@ resource "google_service_account_iam_member" "zenml_orchestrator_workload_identi
   role               = "roles/iam.workloadIdentityUser"
   member             = "serviceAccount:${var.project_id}.svc.id.goog[zenml/zenml-service-account]"
 }
+
+
+# MLflow Service Account for database and storage access
+resource "google_service_account" "mlflow" {
+  account_id   = "${var.project_name}-mlflow"
+  display_name = "MLflow Service Account"
+  description  = "Service account for MLflow workloads to access database and storage"
+  project      = var.project_id
+}
+
+# MLflow Service Account IAM bindings
+resource "google_project_iam_member" "mlflow_cloudsql_client" {
+  project = var.project_id
+  role    = "roles/cloudsql.client"
+  member  = "serviceAccount:${google_service_account.mlflow.email}"
+}
+
+resource "google_project_iam_member" "mlflow_storage_object_admin" {
+  project = var.project_id
+  role    = "roles/storage.objectAdmin"
+  member  = "serviceAccount:${google_service_account.mlflow.email}"
+}
+
+
+# Allow MLflow to access its own secrets in Secret Manager
+resource "google_project_iam_member" "mlflow_secret_accessor" {
+  project = var.project_id
+  role    = "roles/secretmanager.secretAccessor"
+  member  = "serviceAccount:${google_service_account.mlflow.email}"
+
+  condition {
+    title       = "limit_access_mlflow"
+    description = "Limit access to secrets with prefix mlflow-"
+    expression  = "resource.name.startsWith(\"projects/${data.google_project.current.number}/secrets/${var.project_name}-mlflow-\")"
+  }
+}
+
+# Workload Identity binding for MLflow service account
+resource "google_service_account_iam_member" "mlflow_workload_identity" {
+  service_account_id = google_service_account.mlflow.name
+  role               = "roles/iam.workloadIdentityUser"
+  member             = "serviceAccount:${var.project_id}.svc.id.goog[mlflow/mlflow]"
+}

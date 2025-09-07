@@ -30,6 +30,20 @@ variable "lifecycle_rules" {
   ]
 }
 
+variable "mlflow_lifecycle_rules" {
+  description = "List of lifecycle rules for the MLflow bucket"
+  type = list(object({
+    age    = number
+    action = string
+  }))
+  default = [
+    {
+      age    = 90 # Keep MLflow artifacts longer than ZenML artifacts
+      action = "Delete"
+    }
+  ]
+}
+
 
 variable "labels" {
   description = "Labels to apply to resources"
@@ -39,6 +53,11 @@ variable "labels" {
 
 variable "zenml_service_account_email" {
   description = "Email of the existing ZenML service account that will access the storage bucket"
+  type        = string
+}
+
+variable "mlflow_service_account_email" {
+  description = "Email of the MLflow service account that will access the MLflow storage bucket"
   type        = string
 }
 
