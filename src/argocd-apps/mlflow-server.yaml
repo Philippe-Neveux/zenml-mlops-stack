@@ -13,7 +13,7 @@ spec:
     # Helm chart source - Using Bitnami MLflow chart
     - repoURL: https://community-charts.github.io/helm-charts
       chart: mlflow
-      targetRevision: 0.17.3
+      targetRevision: 0.18.0
       helm:
         valueFiles:
           - $values/src/mlflow/values.yaml
