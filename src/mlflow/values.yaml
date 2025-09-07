@@ -85,8 +85,11 @@ securityContext:
 # =============================================================================
 
 service:
+  enabled: true
   type: ClusterIP
   port: 80
+  containerPort: 5000
+  containerPortName: "mlflow"
   name: "http"
   annotations: {}
 
