@@ -19,6 +19,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "notebook>=7.4.5",
     "pygithub>=2.8.1",
     "ruff>=0.12.12",
 ]

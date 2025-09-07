@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mlflow-infrastructure
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/refresh: normal
+    argocd.argoproj.io/sync-wave: "2"  # Deploy after external-secrets-operator (wave 0) and before zenml (wave 4)
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Philippe-Neveux/zenml-mlops-stack.git
+    targetRevision: HEAD
+    path: src/k8s-cluster/mlflow
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mlflow
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true  # Create mlflow namespace if it doesn't exist
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
