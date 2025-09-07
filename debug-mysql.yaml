@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mysql-debug
+  namespace: mlflow
+spec:
+  containers:
+  - name: mysql-debug
+    image: mysql:8.0
+    command: ["/bin/bash"]
+    args: ["-c", "while true; do sleep 30; done;"]
+    env:
+    - name: MYSQL_HOST
+      valueFrom:
+        secretKeyRef:
+          name: mlflow-database-secret
+          key: host
+    - name: MYSQL_PORT
+      valueFrom:
+        secretKeyRef:
+          name: mlflow-database-secret
+          key: port
+    - name: MYSQL_DATABASE
+      valueFrom:
+        secretKeyRef:
+          name: mlflow-database-secret
+          key: database
+    - name: MYSQL_USERNAME
+      valueFrom:
+        secretKeyRef:
+          name: mlflow-database-secret
+          key: username
+    - name: MYSQL_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: mlflow-database-secret
+          key: password
+  restartPolicy: Never

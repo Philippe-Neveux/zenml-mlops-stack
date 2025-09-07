@@ -16,7 +16,10 @@ resource "random_password" "zenml_db_password" {
 # Random password for MLflow database user
 resource "random_password" "mlflow_db_password" {
   length  = 32
-  special = true
+  special = false
+  upper   = true
+  lower   = true
+  numeric = true
 }
 
 # Cloud SQL MySQL Instance

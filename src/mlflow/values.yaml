@@ -32,9 +32,6 @@ backendStore:
     host: "10.175.0.3"
     port: 3306
     database: "mlflow"
-    driver: "pymysql"  # Use PyMySQL driver for proper MySQL connectivity
-    user: ""  # Will be read from secret
-    password: ""  # Will be read from secret
 
   # Reference to existing database secret
   existingDatabaseSecret:
