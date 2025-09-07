@@ -92,6 +92,14 @@ tracking:
       value: "104857600"
     - name: MLFLOW_GCS_DOWNLOAD_CHUNK_SIZE
       value: "104857600"
+    # Override database URLs to use MySQL instead of PostgreSQL
+    - name: MLFLOW_BACKEND_STORE_URI
+      valueFrom:
+        secretKeyRef:
+          name: mlflow-database-secret
+          key: connection-url
+    - name: MLFLOW_DATABASE_AUTH_URI
+      value: "mysql+pymysql://mlflow_user:$(MLFLOW_DATABASE_PASSWORD)@10.175.0.3:3306/mlflow_auth"
 
 # =============================================================================
 # DATABASE CONFIGURATION
