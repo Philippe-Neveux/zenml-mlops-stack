@@ -13,7 +13,7 @@ replicaCount: 1
 # Docker image configuration
 image:
   repository: burakince/mlflow
-  tag: "2.22.1"
+  tag: "3.1.4"
   pullPolicy: IfNotPresent
 
 # =============================================================================
