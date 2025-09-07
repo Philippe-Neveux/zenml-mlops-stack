@@ -18,6 +18,10 @@ tf-apply: tf-plan
 	echo "Applying Terraform changes..."
 	cd src/infra && terraform apply tfplan
 
+tf-output:
+	echo "Fetching Terraform outputs..."
+	cd src/infra && terraform output
+
 #######
 # MySQL
 test-mysql-connection:

@@ -1,209 +1,236 @@
-# Bitnami MLflow Helm Chart Values
-# Based on https://artifacthub.io/packages/helm/bitnami/mlflow
+
+# MLflow Community Chart Configuration
+# Chart: https://artifacthub.io/packages/helm/community-charts/mlflow
+# GitHub: https://github.com/community-charts/helm-charts/tree/main/charts/mlflow
 
 # =============================================================================
-# GLOBAL CONFIGURATION
+# BASIC CONFIGURATION
 # =============================================================================
 
-global:
-  imageRegistry: ""
-  imagePullSecrets: []
+# Number of MLflow server replicas
+replicaCount: 1
+
+# Docker image configuration
+image:
+  repository: burakince/mlflow
+  tag: ""  # Uses chart app version by default
+  pullPolicy: IfNotPresent
 
 # =============================================================================
-# MLFLOW SERVER CONFIGURATION
+# BACKEND STORE CONFIGURATION (MySQL Database)
 # =============================================================================
 
-# MLflow tracking server configuration
-tracking:
-  # Enable the tracking server
-  enabled: true
+backendStore:
+  # Enable database migration on first deployment
+  databaseMigration: true
+  # Enable database connection check
+  databaseConnectionCheck: true
   
-  # Number of replicas
-  replicaCount: 1
-  
-  # Image configuration
-  image:
-    registry: docker.io
-    repository: bitnami/mlflow
-    tag: 2.22.1
-    pullPolicy: IfNotPresent
-  
-  # Service account configuration
-  serviceAccount:
-    create: false
-    name: "mlflow"
-    annotations: {}
-  
-  # Security context
-  podSecurityContext:
+  # MySQL configuration
+  mysql:
     enabled: true
-    fsGroup: 1001
-  
-  containerSecurityContext:
-    enabled: true
-    runAsUser: 1001
-    runAsNonRoot: true
-    allowPrivilegeEscalation: false
-    capabilities:
-      drop:
-        - ALL
-  
-  # Resources
-  resources:
-    limits:
-      cpu: 1000m
-      memory: 2Gi
-    requests:
-      cpu: 200m
-      memory: 512Mi
-  
-  # Autoscaling
-  autoscaling:
-    enabled: true
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPU: 70
-    targetMemory: 80
-  
-  # Liveness and readiness probes
-  livenessProbe:
-    enabled: true
-    initialDelaySeconds: 60
-    periodSeconds: 30
-    timeoutSeconds: 10
-    failureThreshold: 3
-    successThreshold: 1
-  
-  readinessProbe:
-    enabled: true
-    initialDelaySeconds: 30
-    periodSeconds: 15
-    timeoutSeconds: 5
-    failureThreshold: 5
-    successThreshold: 1
-  
-  # Extra environment variables
-  extraEnvVars:
-    - name: GOOGLE_APPLICATION_CREDENTIALS
-      value: ""
-    - name: MLFLOW_GCS_DEFAULT_TIMEOUT
-      value: "60"
-    - name: MLFLOW_GCS_UPLOAD_CHUNK_SIZE
-      value: "104857600"
-    - name: MLFLOW_GCS_DOWNLOAD_CHUNK_SIZE
-      value: "104857600"
-    # Override database URLs to use MySQL instead of PostgreSQL
-    - name: MLFLOW_BACKEND_STORE_URI
-      valueFrom:
-        secretKeyRef:
-          name: mlflow-database-secret
-          key: connection-url
-    - name: MLFLOW_DATABASE_AUTH_URI
-      value: "mysql+pymysql://mlflow_user:$(MLFLOW_DATABASE_PASSWORD)@10.175.0.3:3306/mlflow_auth"
+    host: "10.175.0.3"
+    port: 3306
+    database: "mlflow"
+    driver: "pymysql"  # Use PyMySQL driver for proper MySQL connectivity
+    user: ""  # Will be read from secret
+    password: ""  # Will be read from secret
+
+  # Reference to existing database secret
+  existingDatabaseSecret:
+    name: "mlflow-database-secret"
+    usernameKey: "username"
+    passwordKey: "password"
 
 # =============================================================================
-# DATABASE CONFIGURATION
+# ARTIFACT ROOT CONFIGURATION (Google Cloud Storage)
 # =============================================================================
 
-# External database configuration
-externalDatabase:
-  type: mysql
-  host: "10.175.0.3"
-  port: 3306
-  database: "mlflow"
-  user: "mlflow_user"
-  password: ""
-  existingSecret: "mlflow-database-secret"
-  existingSecretPasswordKey: "password"
-  existingSecretUserKey: "username"
-
-# Disable internal database
-postgresql:
-  enabled: false
-
-mysql:
-  enabled: false
+artifactRoot:
+  # Enable Google Cloud Storage for artifacts
+  gcs:
+    enabled: true
+    bucket: "zenml-mlflow-artifacts"
+    path: ""  # Use root level of bucket
 
 # =============================================================================
-# STORAGE CONFIGURATION
+# SERVICE ACCOUNT & SECURITY
 # =============================================================================
 
-# Default artifact root (will be overridden by GCS)
-defaultArtifactRoot: "gs://zenml-mlflow-artifacts"
+# Use existing service account with Workload Identity
+serviceAccount:
+  create: false
+  name: "mlflow"
+  annotations: {}
+
+# Pod security context
+podSecurityContext:
+  fsGroup: 1001
+  fsGroupChangePolicy: "OnRootMismatch"
+
+# Container security context
+securityContext:
+  runAsUser: 1001
+  runAsGroup: 1001
+  runAsNonRoot: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  privileged: false
+  readOnlyRootFilesystem: false
 
 # =============================================================================
 # SERVICE CONFIGURATION
 # =============================================================================
 
-# Service configuration
 service:
+  enabled: true
   type: ClusterIP
-  ports:
-    http: 80
-  nodePorts:
-    http: ""
-  clusterIP: ""
-  loadBalancerIP: ""
-  loadBalancerSourceRanges: []
-  externalTrafficPolicy: Cluster
+  port: 80
+  containerPort: 5000
+  containerPortName: "mlflow"
+  name: "http"
   annotations: {}
 
 # =============================================================================
 # INGRESS CONFIGURATION
 # =============================================================================
 
-# Ingress configuration
 ingress:
   enabled: true
-  pathType: Prefix
-  apiVersion: ""
-  hostname: mlflow.34.40.173.65.nip.io
-  ingressClassName: "nginx"
-  path: /
+  className: "nginx"
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/proxy-body-size: "0"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
-  tls: true
-  selfSigned: false
-  extraHosts: []
-  extraPaths: []
-  extraTls: []
-  secrets: []
-  extraRules: []
+  hosts:
+    - host: mlflow.34.40.173.65.nip.io
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: mlflow-tls
+      hosts:
+        - mlflow.34.40.173.65.nip.io
 
 # =============================================================================
-# PERSISTENCE
+# RESOURCES & AUTOSCALING
 # =============================================================================
 
-# Persistence is handled by external database and GCS
-persistence:
+# Resource limits and requests
+resources:
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+  requests:
+    cpu: 200m
+    memory: 512Mi
+
+# Horizontal Pod Autoscaling
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+
+# =============================================================================
+# HEALTH CHECKS
+# =============================================================================
+
+# Liveness probe
+livenessProbe:
+  initialDelaySeconds: 60
+  periodSeconds: 30
+  timeoutSeconds: 10
+  failureThreshold: 3
+
+# Readiness probe  
+readinessProbe:
+  initialDelaySeconds: 30
+  periodSeconds: 15
+  timeoutSeconds: 5
+  failureThreshold: 5
+
+# =============================================================================
+# ENVIRONMENT VARIABLES
+# =============================================================================
+
+# Extra environment variables for GCS integration
+extraEnvVars:
+  GOOGLE_APPLICATION_CREDENTIALS: ""
+  MLFLOW_GCS_DEFAULT_TIMEOUT: "60"
+  MLFLOW_GCS_UPLOAD_CHUNK_SIZE: "104857600"
+  MLFLOW_GCS_DOWNLOAD_CHUNK_SIZE: "104857600"
+
+# =============================================================================
+# DEPLOYMENT STRATEGY
+# =============================================================================
+
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: "100%"
+    maxUnavailable: 0
+
+# =============================================================================
+# AUTHENTICATION (Disabled)
+# =============================================================================
+
+# Basic authentication - disabled for now
+auth:
+  enabled: false
+
+# LDAP authentication - disabled for now  
+ldapAuth:
   enabled: false
 
 # =============================================================================
-# NETWORK POLICIES
+# LOGGING & TELEMETRY
 # =============================================================================
 
-# Network policies
-networkPolicy:
+# Logging configuration
+log:
+  enabled: true
+  level: "info"
+
+# Telemetry (usage tracking)
+telemetry:
   enabled: false
 
 # =============================================================================
-# RBAC
+# MONITORING
 # =============================================================================
 
-# RBAC configuration
-rbac:
-  create: false
-
-# =============================================================================
-# METRICS AND MONITORING
-# =============================================================================
-
-# Metrics configuration
-metrics:
+# Service monitor for Prometheus (disabled for now)
+serviceMonitor:
   enabled: false
-  serviceMonitor:
-    enabled: false
+
+# =============================================================================
+# ADDITIONAL SETTINGS
+# =============================================================================
+
+# Node selector, tolerations, and affinity
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Pod annotations
+podAnnotations: {}
+
+# Extra pod labels
+extraPodLabels: {}
