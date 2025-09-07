@@ -85,11 +85,8 @@ securityContext:
 # =============================================================================
 
 service:
-  enabled: true
   type: ClusterIP
   port: 80
-  containerPort: 5000
-  containerPortName: "mlflow"
   name: "http"
   annotations: {}
 
@@ -200,19 +197,6 @@ ldapAuth:
   enabled: false
 
 # =============================================================================
-# LOGGING & TELEMETRY
-# =============================================================================
-
-# Logging configuration
-log:
-  enabled: true
-  level: "info"
-
-# Telemetry (usage tracking)
-telemetry:
-  enabled: false
-
-# =============================================================================
 # MONITORING
 # =============================================================================
 
@@ -231,6 +215,3 @@ affinity: {}
 
 # Pod annotations
 podAnnotations: {}
-
-# Extra pod labels
-extraPodLabels: {}
