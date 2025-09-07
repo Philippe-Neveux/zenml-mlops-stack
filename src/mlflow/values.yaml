@@ -1,71 +1,201 @@
-# Minimal MLflow values for schema compliance
-replicaCount: 1
+# Bitnami MLflow Helm Chart Values
+# Based on https://artifacthub.io/packages/helm/bitnami/mlflow
 
-image:
-  repository: ghcr.io/mlflow/mlflow
-  tag: "v2.8.1"
-  pullPolicy: IfNotPresent
+# =============================================================================
+# GLOBAL CONFIGURATION
+# =============================================================================
 
-serviceAccount:
-  create: false
-  name: mlflow
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
 
-backendStore:
-  databaseMigration: true
-  databaseConnectionCheck: true
-  mysql:
+# =============================================================================
+# MLFLOW SERVER CONFIGURATION
+# =============================================================================
+
+# MLflow tracking server configuration
+tracking:
+  # Enable the tracking server
+  enabled: true
+  
+  # Number of replicas
+  replicaCount: 1
+  
+  # Image configuration
+  image:
+    registry: docker.io
+    repository: bitnami/mlflow
+    tag: 2.22.1
+    pullPolicy: IfNotPresent
+  
+  # Service account configuration
+  serviceAccount:
+    create: false
+    name: "mlflow"
+    annotations: {}
+  
+  # Security context
+  podSecurityContext:
     enabled: true
-    host: "10.175.0.3"
-    port: 3306
-    database: "mlflow"
-    user: "mlflow_user"
-    password: ""
-    driver: "pymysql"
-  existingDatabaseSecret:
-    name: "mlflow-database-secret"
-    usernameKey: "username"
-    passwordKey: "password"
+    fsGroup: 1001
+  
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+  
+  # Resources
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+    requests:
+      cpu: 200m
+      memory: 512Mi
+  
+  # Autoscaling
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPU: 70
+    targetMemory: 80
+  
+  # Liveness and readiness probes
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 60
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3
+    successThreshold: 1
+  
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 30
+    periodSeconds: 15
+    timeoutSeconds: 5
+    failureThreshold: 5
+    successThreshold: 1
+  
+  # Extra environment variables
+  extraEnvVars:
+    - name: GOOGLE_APPLICATION_CREDENTIALS
+      value: ""
+    - name: MLFLOW_GCS_DEFAULT_TIMEOUT
+      value: "60"
+    - name: MLFLOW_GCS_UPLOAD_CHUNK_SIZE
+      value: "104857600"
+    - name: MLFLOW_GCS_DOWNLOAD_CHUNK_SIZE
+      value: "104857600"
 
+# =============================================================================
+# DATABASE CONFIGURATION
+# =============================================================================
+
+# External database configuration
+externalDatabase:
+  type: mysql
+  host: "10.175.0.3"
+  port: 3306
+  database: "mlflow"
+  user: "mlflow_user"
+  password: ""
+  existingSecret: "mlflow-database-secret"
+  existingSecretPasswordKey: "password"
+  existingSecretUserKey: "username"
+
+# Disable internal database
 postgresql:
   enabled: false
 
 mysql:
   enabled: false
 
-artifactRoot:
-  proxiedArtifactStorage: false
-  gcs:
-    enabled: true
-    bucket: "zenml-mlflow-artifacts"
-    path: ""
+# =============================================================================
+# STORAGE CONFIGURATION
+# =============================================================================
 
+# Default artifact root (will be overridden by GCS)
+defaultArtifactRoot: "gs://zenml-mlflow-artifacts"
+
+# =============================================================================
+# SERVICE CONFIGURATION
+# =============================================================================
+
+# Service configuration
+service:
+  type: ClusterIP
+  ports:
+    http: 80
+  nodePorts:
+    http: ""
+  clusterIP: ""
+  loadBalancerIP: ""
+  loadBalancerSourceRanges: []
+  externalTrafficPolicy: Cluster
+  annotations: {}
+
+# =============================================================================
+# INGRESS CONFIGURATION
+# =============================================================================
+
+# Ingress configuration
 ingress:
   enabled: true
-  className: "nginx"
+  pathType: Prefix
+  apiVersion: ""
+  hostname: mlflow.34.40.173.65.nip.io
+  ingressClassName: "nginx"
+  path: /
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/proxy-body-size: "0"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
-  hosts:
-    - host: mlflow.34.40.173.65.nip.io
-      paths:
-        - path: /
-          pathType: Prefix
-  tls:
-    - secretName: mlflow-tls
-      hosts:
-        - mlflow.34.40.173.65.nip.io
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  tls: true
+  selfSigned: false
+  extraHosts: []
+  extraPaths: []
+  extraTls: []
+  secrets: []
+  extraRules: []
 
-resources:
-  limits:
-    cpu: 1000m
-    memory: 2Gi
-  requests:
-    cpu: 200m
-    memory: 512Mi
+# =============================================================================
+# PERSISTENCE
+# =============================================================================
 
-autoscaling:
-  enabled: true
-  minReplicas: 1
-  maxReplicas: 3
+# Persistence is handled by external database and GCS
+persistence:
+  enabled: false
+
+# =============================================================================
+# NETWORK POLICIES
+# =============================================================================
+
+# Network policies
+networkPolicy:
+  enabled: false
+
+# =============================================================================
+# RBAC
+# =============================================================================
+
+# RBAC configuration
+rbac:
+  create: false
+
+# =============================================================================
+# METRICS AND MONITORING
+# =============================================================================
+
+# Metrics configuration
+metrics:
+  enabled: false
+  serviceMonitor:
+    enabled: false

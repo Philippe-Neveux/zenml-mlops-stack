@@ -222,6 +222,14 @@ argocd-app-zenml-server: connect-k8s-cluster
 	@echo "Deploying zenml-server via ArgoCD..."
 	kubectl apply -f src/argocd-apps/zenml-server.yaml
 
+argocd-app-mlflow-infrastructure: connect-k8s-cluster
+	@echo "Deploying mlflow-infrastructure via ArgoCD..."
+	kubectl apply -f src/argocd-apps/mlflow-infrastructure.yaml
+
+argocd-app-mlflow-server: connect-k8s-cluster
+	@echo "Deploying mlflow-server via ArgoCD..."
+	kubectl apply -f src/argocd-apps/mlflow-server.yaml
+
 argocd-apps-deploy-all: argocd-app-external-secrets argocd-app-zenml-secret-store argocd-app-cert-manager argocd-app-cluster-issuers argocd-app-zenml-external-secrets argocd-app-nginx-ingress argocd-app-zenml-server
 	@echo "All ArgoCD applications deployed with proper sync wave ordering!"
 
