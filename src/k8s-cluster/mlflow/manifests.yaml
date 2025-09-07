@@ -111,7 +111,6 @@ spec:
         host: "{{ .host }}"
         port: "{{ .port }}"
         database: "{{ .database }}"
-        driver: "{{ .driver }}"
         
         # Complete connection URL for MLflow
         connection-url: "{{ .connection_url }}"
@@ -141,11 +140,6 @@ spec:
       remoteRef:
         key: zenml-mlflow-db-connection
         property: database
-    
-    - secretKey: driver
-      remoteRef:
-        key: zenml-mlflow-db-connection
-        property: driver
     
     - secretKey: connection_url
       remoteRef:
