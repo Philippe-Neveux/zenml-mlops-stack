@@ -1,0 +1,183 @@
+# MLflow Helm Chart Values - Schema Compliant
+# Based on community-charts/mlflow chart v0.18.0
+
+# =============================================================================
+# BASIC CONFIGURATION
+# =============================================================================
+
+# Number of MLflow server replicas
+replicaCount: 1
+
+# MLflow Docker image configuration
+image:
+  repository: burakince/mlflow
+  tag: "2.22.2"
+  pullPolicy: IfNotPresent
+
+# =============================================================================
+# SECURITY CONFIGURATION
+# =============================================================================
+
+# Service Account configuration (uses Workload Identity)
+serviceAccount:
+  create: false
+  name: mlflow
+
+# Security context
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 1001
+
+# =============================================================================
+# SERVICE CONFIGURATION
+# =============================================================================
+
+service:
+  type: ClusterIP
+  port: 80
+
+# =============================================================================
+# DATABASE CONFIGURATION
+# =============================================================================
+
+# Database backend configuration
+backendStore:
+  databaseMigration: true
+  databaseConnectionCheck: true
+  
+  mysql:
+    enabled: true
+    host: "10.175.0.3"
+    port: 3306
+    database: "mlflow"
+    user: "mlflow_user"
+    password: ""
+    driver: "pymysql"
+  
+  existingDatabaseSecret:
+    name: "mlflow-database-secret"
+    usernameKey: "username"
+    passwordKey: "password"
+
+# Disable embedded databases
+postgresql:
+  enabled: false
+
+mysql:
+  enabled: false
+
+# =============================================================================
+# STORAGE CONFIGURATION
+# =============================================================================
+
+artifactRoot:
+  proxiedArtifactStorage: false
+  gcs:
+    enabled: true
+    bucket: "zenml-mlflow-artifacts"
+    path: ""
+  azureBlob:
+    enabled: false
+  s3:
+    enabled: false
+
+# =============================================================================
+# NETWORKING CONFIGURATION
+# =============================================================================
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: mlflow.34.40.173.65.nip.io
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: mlflow-tls
+      hosts:
+        - mlflow.34.40.173.65.nip.io
+
+# =============================================================================
+# RESOURCE MANAGEMENT
+# =============================================================================
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+  requests:
+    cpu: 200m
+    memory: 512Mi
+
+# =============================================================================
+# AUTOSCALING
+# =============================================================================
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
+
+# =============================================================================
+# HEALTH CHECKS
+# =============================================================================
+
+livenessProbe:
+  initialDelaySeconds: 60
+  periodSeconds: 30
+  timeoutSeconds: 10
+  failureThreshold: 3
+
+readinessProbe:
+  initialDelaySeconds: 30
+  periodSeconds: 15
+  timeoutSeconds: 5
+  failureThreshold: 5
+
+# =============================================================================
+# ENVIRONMENT VARIABLES
+# =============================================================================
+
+extraEnvVars:
+  GOOGLE_APPLICATION_CREDENTIALS: ""
+  MLFLOW_GCS_DEFAULT_TIMEOUT: "60"
+  MLFLOW_GCS_UPLOAD_CHUNK_SIZE: "104857600"
+  MLFLOW_GCS_DOWNLOAD_CHUNK_SIZE: "104857600"
+
+# =============================================================================
+# PERFORMANCE CONFIGURATION
+# =============================================================================
+
+extraArgs:
+  workers: "2"
+
+extraFlags:
+  - serveArtifacts
+
+# =============================================================================
+# SCHEDULING
+# =============================================================================
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+
+extraVolumes: []
+extraVolumeMounts: []
