@@ -1,25 +1,12 @@
-# MLflow Helm Chart Values
-# Comprehensive configuration for MLflow deployment in Kubernetes
+# MLflow Helm Chart Values - Schema Compliant
 # Based on community-charts/mlflow chart v0.18.0
-# Documentation: https://artifacthub.io/packages/helm/community-charts/mlflow
 
 # =============================================================================
-# DEPLOYMENT CONFIGURATION
+# BASIC CONFIGURATION
 # =============================================================================
 
 # Number of MLflow server replicas
 replicaCount: 1
-
-# Deployment strategy
-strategy:
-  type: "RollingUpdate"
-  rollingUpdate:
-    maxSurge: "100%"
-    maxUnavailable: 0
-
-# =============================================================================
-# IMAGE CONFIGURATION
-# =============================================================================
 
 # MLflow Docker image configuration
 image:
@@ -33,16 +20,10 @@ image:
 
 # Service Account configuration (uses Workload Identity)
 serviceAccount:
-  # Use the service account created by our infrastructure
   create: false
-  name: mlflow  # This matches our Workload Identity service account
-  annotations: {}
+  name: mlflow
 
-# Pod and container security context
-podSecurityContext:
-  fsGroup: 1001
-  fsGroupChangePolicy: "OnRootMismatch"
-
+# Security context
 securityContext:
   allowPrivilegeEscalation: false
   capabilities:
@@ -50,66 +31,40 @@ securityContext:
       - ALL
   readOnlyRootFilesystem: false
   runAsNonRoot: true
-  privileged: false
   runAsUser: 1001
-  runAsGroup: 1001
 
 # =============================================================================
 # SERVICE CONFIGURATION
 # =============================================================================
 
-# Kubernetes service configuration
 service:
-  enabled: true
   type: ClusterIP
   port: 80
-  name: http
-  containerPort: 5000
-  containerPortName: mlflow
-  annotations: {}
 
 # =============================================================================
-# LOGGING AND TELEMETRY
-# =============================================================================
-
-# MLflow logging configuration
-log:
-  enabled: true
-  level: info
-
-# Disable telemetry for privacy
-telemetry:
-  enabled: false
-
-# =============================================================================
-# DATABASE BACKEND CONFIGURATION
+# DATABASE CONFIGURATION
 # =============================================================================
 
 # Database backend configuration
 backendStore:
-  # Enable database migration on startup
   databaseMigration: true
-  
-  # Enable database connection check
   databaseConnectionCheck: true
   
-  # Use MySQL backend
   mysql:
     enabled: true
-    host: "10.175.0.3"  # Private IP from Terraform Cloud SQL instance
+    host: "10.175.0.3"
     port: 3306
-    database: "mlflow"  # Database name created by Terraform
-    user: "mlflow_user"  # Will be overridden by secret
-    password: ""  # Will be overridden by secret
+    database: "mlflow"
+    user: "mlflow_user"
+    password: ""
     driver: "pymysql"
   
-  # Use our external secret for database credentials
   existingDatabaseSecret:
     name: "mlflow-database-secret"
     usernameKey: "username"
     passwordKey: "password"
 
-# Disable embedded databases (we use Cloud SQL)
+# Disable embedded databases
 postgresql:
   enabled: false
 
@@ -117,42 +72,35 @@ mysql:
   enabled: false
 
 # =============================================================================
-# ARTIFACT STORAGE CONFIGURATION
+# STORAGE CONFIGURATION
 # =============================================================================
 
-# Artifact storage configuration
 artifactRoot:
-  # Disable proxied artifact storage (direct GCS access via Workload Identity)
   proxiedArtifactStorage: false
-  
-  # Use Google Cloud Storage
   gcs:
     enabled: true
-    bucket: "zenml-mlflow-artifacts"  # Our dedicated MLflow bucket
-    path: ""  # Use root level of bucket
-  
-  # Disable other storage backends
+    bucket: "zenml-mlflow-artifacts"
+    path: ""
   azureBlob:
     enabled: false
   s3:
     enabled: false
 
 # =============================================================================
-# INGRESS CONFIGURATION
+# NETWORKING CONFIGURATION
 # =============================================================================
 
-# Ingress configuration for HTTPS access
 ingress:
   enabled: true
   className: "nginx"
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    nginx.ingress.kubernetes.io/proxy-body-size: "0"  # Allow large file uploads
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
   hosts:
-    - host: mlflow.34.40.173.65.nip.io  # Using nip.io for automatic DNS
+    - host: mlflow.34.40.173.65.nip.io
       paths:
         - path: /
           pathType: Prefix
@@ -165,7 +113,6 @@ ingress:
 # RESOURCE MANAGEMENT
 # =============================================================================
 
-# Resource allocation
 resources:
   limits:
     cpu: 1000m
@@ -174,32 +121,22 @@ resources:
     cpu: 200m
     memory: 512Mi
 
-# Horizontal Pod Autoscaler
+# =============================================================================
+# AUTOSCALING
+# =============================================================================
+
 autoscaling:
   enabled: true
   minReplicas: 1
   maxReplicas: 3
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 70
-    - type: Resource
-      resource:
-        name: memory
-        target:
-          type: Utilization
-          averageUtilization: 80
+  targetCPUUtilizationPercentage: 70
 
 # =============================================================================
 # HEALTH CHECKS
 # =============================================================================
 
-# Liveness and readiness probes
 livenessProbe:
-  initialDelaySeconds: 60  # Extra time for database migration
+  initialDelaySeconds: 60
   periodSeconds: 30
   timeoutSeconds: 10
   failureThreshold: 3
@@ -214,66 +151,33 @@ readinessProbe:
 # ENVIRONMENT VARIABLES
 # =============================================================================
 
-# Extra environment variables for GCS integration
 extraEnvVars:
-  # Google Cloud Storage configuration
-  GOOGLE_APPLICATION_CREDENTIALS: ""  # Will use Workload Identity
+  GOOGLE_APPLICATION_CREDENTIALS: ""
   MLFLOW_GCS_DEFAULT_TIMEOUT: "60"
-  MLFLOW_GCS_UPLOAD_CHUNK_SIZE: "104857600"  # 100MB chunks
-  MLFLOW_GCS_DOWNLOAD_CHUNK_SIZE: "104857600"  # 100MB chunks
+  MLFLOW_GCS_UPLOAD_CHUNK_SIZE: "104857600"
+  MLFLOW_GCS_DOWNLOAD_CHUNK_SIZE: "104857600"
 
 # =============================================================================
 # PERFORMANCE CONFIGURATION
 # =============================================================================
 
-# Extra command line arguments for MLflow server
 extraArgs:
-  # Set the number of gunicorn workers
-  workers: 2
-  
-# Extra flags for MLflow server
+  workers: "2"
+
 extraFlags:
-  # Enable artifact serving through proxy
   - serveArtifacts
 
 # =============================================================================
-# SCHEDULING CONFIGURATION
+# SCHEDULING
 # =============================================================================
 
-# Node selector, tolerations, and affinity
 nodeSelector: {}
-
 tolerations: []
-
 affinity: {}
 
 # =============================================================================
-# MONITORING CONFIGURATION
+# VOLUMES
 # =============================================================================
 
-# ServiceMonitor for Prometheus monitoring (if available)
-serviceMonitor:
-  enabled: false  # Enable if you have Prometheus operator
-  namespace: monitoring
-  labels:
-    release: prometheus
-  interval: 30s
-  timeout: 10s
-
-# =============================================================================
-# ADDITIONAL CONFIGURATION
-# =============================================================================
-
-# Additional labels and annotations
-extraLabels: {}
-extraAnnotations: {}
-
-# Additional volumes and volume mounts
 extraVolumes: []
 extraVolumeMounts: []
-
-# Additional containers (sidecars)
-extraContainers: []
-
-# Additional init containers
-extraInitContainers: []
