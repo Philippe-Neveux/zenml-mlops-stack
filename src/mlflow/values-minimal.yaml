@@ -2,8 +2,8 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/mlflow/mlflow
-  tag: "v2.8.1"
+  repository: burakince/mlflow
+  tag: "2.22.2"
   pullPolicy: IfNotPresent
 
 serviceAccount:
@@ -69,3 +69,4 @@ autoscaling:
   enabled: true
   minReplicas: 1
   maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
