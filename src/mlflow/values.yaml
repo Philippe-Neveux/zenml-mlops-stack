@@ -13,7 +13,7 @@ replicaCount: 1
 # Docker image configuration
 image:
   repository: burakince/mlflow
-  tag: ""  # Uses chart app version by default
+  tag: "2.22.1"
   pullPolicy: IfNotPresent
 
 # =============================================================================
