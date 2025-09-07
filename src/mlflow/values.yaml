@@ -10,12 +10,6 @@
 # Number of MLflow server replicas
 replicaCount: 1
 
-# Docker image configuration
-image:
-  repository: burakince/mlflow
-  tag: "3.1.4"
-  pullPolicy: IfNotPresent
-
 # =============================================================================
 # BACKEND STORE CONFIGURATION (MySQL Database)
 # =============================================================================
