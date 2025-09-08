@@ -171,6 +171,13 @@ resource "google_service_account_iam_member" "zenml_orchestrator_workload_identi
   member             = "serviceAccount:${var.project_id}.svc.id.goog[zenml/zenml-service-account]"
 }
 
+# Workload Identity binding for ZenML database migration job
+resource "google_service_account_iam_member" "zenml_db_migration_workload_identity" {
+  service_account_id = google_service_account.zenml.name
+  role               = "roles/iam.workloadIdentityUser"
+  member             = "serviceAccount:${var.project_id}.svc.id.goog[zenml/zenml-server-db-migration]"
+}
+
 
 # MLflow Service Account for database and storage access
 resource "google_service_account" "mlflow" {
