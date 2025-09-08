@@ -80,6 +80,11 @@ output "private_service_access_name" {
   value       = google_compute_global_address.private_service_access.name
 }
 
+output "private_service_connection" {
+  description = "Private service access connection for dependency management"
+  value       = google_service_networking_connection.private_service_access
+}
+
 # CIDR block outputs for networking
 output "vpc_cidr" {
   description = "CIDR block of the VPC"

@@ -64,6 +64,12 @@ variable "private_network_id" {
   type        = string
 }
 
+variable "private_service_connection" {
+  description = "Private service connection dependency"
+  type        = any
+  default     = null
+}
+
 variable "gke_cluster_subnet_cidrs" {
   description = "List of CIDR blocks for GKE cluster subnets that need database access"
   type        = list(string)
@@ -79,7 +85,7 @@ variable "public_ip_enabled" {
 variable "ssl_mode" {
   description = "SSL mode for database connections. Options: ALLOW_UNENCRYPTED_AND_ENCRYPTED, ENCRYPTED_ONLY, TRUSTED_CLIENT_CERTIFICATE_REQUIRED"
   type        = string
-  default     = "ENCRYPTED_ONLY"
+  default     = "ALLOW_UNENCRYPTED_AND_ENCRYPTED" # Changed to allow unencrypted for debugging
 
   validation {
     condition = contains([

@@ -189,7 +189,7 @@ output "mysql_connectivity_info" {
   value = {
     private_ip_address      = google_sql_database_instance.zenml_mysql.private_ip_address
     network_name            = regex("projects/[^/]+/global/networks/(.+)", var.private_network_id)[0]
-    firewall_rules          = length(var.gke_cluster_subnet_cidrs) > 0 ? [google_compute_firewall.mysql_access_from_gke[0].name] : []
+    connectivity_info       = "Private IP Cloud SQL automatically authorizes VPC networks - no additional firewall rules needed"
     connection_test_command = "kubectl run mysql-test --image=mysql:8.0 --rm -it --restart=Never -- mysql -h ${google_sql_database_instance.zenml_mysql.private_ip_address} -u ${google_sql_user.zenml.name} -p${random_password.zenml_db_password.result} ${google_sql_database.zenml.name}"
   }
   sensitive = true
@@ -198,11 +198,13 @@ output "mysql_connectivity_info" {
 output "mysql_network_diagnostics" {
   description = "Network diagnostics information for troubleshooting connectivity"
   value = {
-    mysql_private_ip = google_sql_database_instance.zenml_mysql.private_ip_address
-    mysql_port       = 3306
-    vpc_network      = var.private_network_id
-    authorized_cidrs = var.gke_cluster_subnet_cidrs
-    ssl_mode         = var.ssl_mode
+    mysql_private_ip       = google_sql_database_instance.zenml_mysql.private_ip_address
+    mysql_port             = 3306
+    vpc_network            = var.private_network_id
+    auto_authorized_ranges = "All VPC networks and subnets are automatically authorized for private IP Cloud SQL"
+    gke_subnet_cidrs       = var.gke_cluster_subnet_cidrs
+    ssl_mode               = var.ssl_mode
+    connectivity_method    = "VPC Private Service Connection"
   }
   sensitive = false
 }

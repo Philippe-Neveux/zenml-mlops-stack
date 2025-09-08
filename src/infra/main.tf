@@ -120,7 +120,8 @@ module "mysql" {
   project_id   = var.project_id
   region       = var.region
 
-  private_network_id = module.vpc.network_id
+  private_network_id         = module.vpc.network_id
+  private_service_connection = module.vpc.private_service_connection
 
   # Network access configuration for GKE connectivity
   gke_cluster_subnet_cidrs = [

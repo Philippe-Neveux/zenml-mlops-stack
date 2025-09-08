@@ -47,9 +47,10 @@ resource "google_sql_database_instance" "zenml_mysql" {
       enable_private_path_for_google_cloud_services = true
       ssl_mode                                      = var.ssl_mode
 
-      # Authorized networks (if public IP is enabled)
+      # Authorized networks - Only applies to public IP instances
+      # For private IP instances, access is controlled by VPC peering and firewall rules
       dynamic "authorized_networks" {
-        for_each = var.authorized_networks
+        for_each = var.public_ip_enabled ? var.authorized_networks : []
         content {
           name  = authorized_networks.value.name
           value = authorized_networks.value.value
@@ -74,6 +75,9 @@ resource "google_sql_database_instance" "zenml_mysql" {
   lifecycle {
     prevent_destroy = false
   }
+
+  # Ensure private service connection is established first
+  depends_on = [var.private_service_connection]
 }
 
 # ZenML Database
@@ -276,25 +280,7 @@ resource "google_secret_manager_secret_version" "mlflow_db_connection" {
   })
 }
 
-# Firewall rule to explicitly allow MySQL traffic from GKE nodes
-resource "google_compute_firewall" "mysql_access_from_gke" {
-  count   = length(var.gke_cluster_subnet_cidrs) > 0 ? 1 : 0
-  name    = "${var.project_name}-mysql-gke-access"
-  network = regex("projects/[^/]+/global/networks/(.+)", var.private_network_id)[0]
-  project = var.project_id
-
-  description = "Allow MySQL access from GKE cluster nodes"
-
-  allow {
-    protocol = "tcp"
-    ports    = ["3306"]
-  }
-
-  # Source ranges include GKE node subnets and pod ranges
-  source_ranges = var.gke_cluster_subnet_cidrs
-
-  target_tags = ["mysql-server"]
-  priority    = 1000
-
-  depends_on = [google_sql_database_instance.zenml_mysql]
-}
+# Note: For private IP Cloud SQL instances, network access is automatically
+# managed through VPC peering and private service connections.
+# Firewall rules are not typically needed for Cloud SQL private IP access
+# as it's handled at the VPC peering level.
