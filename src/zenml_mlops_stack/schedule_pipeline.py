@@ -1,5 +1,5 @@
-from zenml_mlops_stack.train import training_pipeline
 from zenml.config.schedule import Schedule
+from zenml_mlops_stack.train import training_pipeline
 
 # Create a schedule using a cron expression
 schedule = Schedule(

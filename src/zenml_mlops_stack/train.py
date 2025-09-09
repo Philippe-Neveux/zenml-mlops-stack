@@ -7,13 +7,26 @@ from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 
+import mlflow
 from zenml import Model, pipeline, step
 from zenml.config import DockerSettings
 
 docker_settings = DockerSettings(python_package_installer="uv")
 
+
+from zenml.integrations.mlflow.flavors.mlflow_experiment_tracker_flavor import (
+    MLFlowExperimentTrackerSettings,
+)
+
+mlflow_settings = MLFlowExperimentTrackerSettings(
+    experiment_name="Default_Project",
+    nested=False,
+    tags={},
+)
+
 from zenml.integrations.kubernetes.flavors import KubernetesOrchestratorSettings
 from zenml.integrations.kubernetes.pod_settings import KubernetesPodSettings
+
 k8s_settings = KubernetesOrchestratorSettings(
     orchestrator_pod_settings=KubernetesPodSettings(
         resources={
@@ -30,7 +43,12 @@ k8s_settings = KubernetesOrchestratorSettings(
     service_account_name="zenml-service-account"
 )
 
-@step
+@step(
+    experiment_tracker="mlflow_tracker",
+    settings={
+        "experiment_tracker": mlflow_settings
+    }
+)
 def training_data_loader() -> Tuple[
     # Notice we use a Tuple and Annotated to return 
     # multiple named outputs
@@ -46,6 +64,7 @@ def training_data_loader() -> Tuple[
     X_train, X_test, y_train, y_test = train_test_split(
         iris.data, iris.target, test_size=0.2, shuffle=True, random_state=42
     )
+    mlflow.log_param("dataset", "iris")
     return X_train, X_test, y_train, y_test
 
 
@@ -63,7 +82,13 @@ model = Model(
 )
 
 
-@step(model=model)
+@step(
+    model=model,
+    experiment_tracker="mlflow_tracker",
+    settings={
+        "experiment_tracker": mlflow_settings
+    }
+)
 def svc_trainer(
     X_train: pd.DataFrame,
     y_train: pd.Series,
@@ -79,6 +104,8 @@ def svc_trainer(
 
     train_acc = model.score(X_train.to_numpy(), y_train.to_numpy())
     print(f"Train accuracy: {train_acc}")
+    
+    mlflow.log_metric("Train Accuracy", train_acc)
 
     return model, train_acc
 

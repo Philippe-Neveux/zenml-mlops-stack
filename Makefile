@@ -127,12 +127,22 @@ zenml-register-orchestrator: zenml-login
 		--flavor=kubernetes \
 		--kubernetes_context=$(KUBERNETES_CONTEXT)
 
+MLFLOW_URI := https://mlflow.34.40.173.65.nip.io
+zenml-register-mlflow: zenml-login
+	@echo "Registering MLflow in ZenML..."
+	uv run zenml experiment-tracker register mlflow \
+		--flavor=mlflow \
+		--tracking_uri=$(MLFLOW_URI) \
+		--tracking_username=admin \
+		--tracking_password=password
+
 zenml-configure-mlops-stack: zenml-login
 	@echo "Configure MLOps stack with each component ..."
 	uv run zenml stack register mlops_stack \
 		-a gs_store \
 		-c $(ARTIFACT_REGISTRY_NAME) \
 		-o kubernetes_orchestrator \
+		-e mlflow \
 		--set
 
 gcp-connect-to-artifact-registry: 
@@ -154,7 +164,7 @@ schedule-training: zenml-login
 	uv run src/zenml_mlops_stack/schedule_pipeline.py
 
 ruff:
-	ruff check src/zenml_mlops_stack --fix --select I
+	uv run ruff check src/zenml_mlops_stack --fix --select I
 
 ###############
 # ArgoCD setup
