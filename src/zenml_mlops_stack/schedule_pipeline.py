@@ -4,7 +4,7 @@ from zenml_mlops_stack.train import training_pipeline
 # Create a schedule using a cron expression
 schedule = Schedule(
     name="training_pipeline_schedule",
-    cron_expression="0 * * * *"  # Runs every hour
+    cron_expression="*/10 * * * *"  # Runs every 10 minutes
 )
 
 # Attach the schedule to your pipeline

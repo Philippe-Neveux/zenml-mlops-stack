@@ -10,8 +10,11 @@ from sklearn.svm import SVC
 import mlflow
 from zenml import Model, pipeline, step
 from zenml.config import DockerSettings
+from zenml.config.docker_settings import PythonPackageInstaller
 
-docker_settings = DockerSettings(python_package_installer="uv")
+docker_settings = DockerSettings(
+    python_package_installer=PythonPackageInstaller.UV
+)
 
 
 from zenml.integrations.mlflow.flavors.mlflow_experiment_tracker_flavor import (
@@ -20,7 +23,7 @@ from zenml.integrations.mlflow.flavors.mlflow_experiment_tracker_flavor import (
 
 mlflow_settings = MLFlowExperimentTrackerSettings(
     experiment_name="Default_Project",
-    nested=False,
+    nested=True,
     tags={},
 )
 
@@ -111,6 +114,7 @@ def svc_trainer(
 
 
 @pipeline(
+    enable_cache=False,
     settings={
         "docker": docker_settings,
         "orchestrator": k8s_settings

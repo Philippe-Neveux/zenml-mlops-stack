@@ -3,6 +3,25 @@ from zenml.config import DockerSettings, PythonPackageInstaller
 
 docker_settings = DockerSettings(python_package_installer=PythonPackageInstaller.UV)
 
+from zenml.integrations.kubernetes.flavors import KubernetesOrchestratorSettings
+from zenml.integrations.kubernetes.pod_settings import KubernetesPodSettings
+
+k8s_settings = KubernetesOrchestratorSettings(
+    orchestrator_pod_settings=KubernetesPodSettings(
+        resources={
+            "requests": {
+                "cpu": "1",
+                "memory": "2Gi"
+            },
+            "limits": {
+                "cpu": "2",
+                "memory": "4Gi"
+            }
+        }
+    ),
+    service_account_name="zenml-service-account"
+)
+
 
 @step
 def load_data() -> dict:
@@ -25,7 +44,12 @@ def train_model(data: dict) -> None:
     print(f"Trained model using {len(data['features'])} data points. "
           f"Feature sum is {total_features}, label sum is {total_labels}")
 
-@pipeline(settings={"docker": docker_settings})
+@pipeline(
+    settings={
+        "docker": docker_settings,
+        "orchestrator": k8s_settings
+    }
+)
 def simple_ml_pipeline():
     """Define a pipeline that connects the steps."""
     dataset = load_data()
