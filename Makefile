@@ -100,11 +100,15 @@ zenml-login:
 
 
 zenml-register-code-repository: zenml-login
-	export $(grep -v '^#' .env | xargs)
 	@echo "Registering code repository in ZenML..."
-	uv run zenml code-repository register Github_Repo --type=github \
-		--owner=Philippe-Neveux --repository=zenml-mlops-stack \
+	source .env && uv run zenml code-repository register Github_Repo \
+		--type=github \
+		--owner=Philippe-Neveux \
+		--repository=zenml-mlops-stack \
 		--token=$(GITHUB_TOKEN)
+
+tst:
+	 echo $$GITHUB_TOKEN
 
 
 BUCKET_NAME := zenml-zenml-artifacts
