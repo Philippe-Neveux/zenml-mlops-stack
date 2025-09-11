@@ -105,10 +105,10 @@ zenml-register-code-repository: zenml-login
 		--type=github \
 		--owner=Philippe-Neveux \
 		--repository=zenml-mlops-stack \
-		--token=$(GITHUB_TOKEN)
+		--token=$$GITHUB_TOKEN
 
 tst:
-	 echo $$GITHUB_TOKEN
+	source .env && echo $$GITHUB_TOKEN
 
 
 BUCKET_NAME := zenml-zenml-artifacts
