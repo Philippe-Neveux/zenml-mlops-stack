@@ -166,6 +166,17 @@ schedule-training: zenml-login
 ruff:
 	uv run ruff check src/zenml_mlops_stack --fix --select I
 
+kubectl-set-namespace-zenml:
+	@echo "Setting default namespace to zenml..."
+	kubectl config set-context --current --namespace=zenml
+
+kubectl-cleanup-completed-pods:
+	@echo "Removing completed pods in all namespaces..."
+	# Remove succeeded pods
+	kubectl delete pods --field-selector=status.phase=Succeeded
+	# Remove failed pods  
+	kubectl delete pods --field-selector=status.phase=Failed
+
 ###############
 # ArgoCD setup
 argocd-install: connect-k8s-cluster
