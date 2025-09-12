@@ -180,6 +180,10 @@ kubectl-set-namespace-zenml:
 	@echo "Setting default namespace to zenml..."
 	kubectl config set-context --current --namespace=zenml
 
+kubectl-get-pods: kubectl-set-namespace-zenml
+	@echo "Listing pods in the current namespace..."
+	kubectl get pods --sort-by=.metadata.creationTimestamp
+
 kubectl-cleanup-completed-pods:
 	@echo "Removing completed pods in all namespaces..."
 	# Remove succeeded pods
