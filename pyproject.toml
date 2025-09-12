@@ -15,7 +15,7 @@ dependencies = [
     "pip>=25.2",
     "python-rapidjson<1.15",
     "scikit-learn>=1.7.1",
-    "zenml[server]==0.84.3",
+    "zenml[server]==0.85.0",
 ]
 
 [dependency-groups]

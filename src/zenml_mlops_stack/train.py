@@ -15,7 +15,7 @@ from zenml.config import DockerSettings
 from zenml.config.docker_settings import PythonPackageInstaller
 
 docker_settings = DockerSettings(
-    python_package_installer=PythonPackageInstaller.UV
+    prevent_build_reuse=True,
     build_config={"build_options": {"platform": "linux/amd64"}}
 )
 

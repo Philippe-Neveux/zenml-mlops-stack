@@ -2996,7 +2996,7 @@ wheels = [
 
 [[package]]
 name = "zenml"
-version = "0.84.3"
+version = "0.85.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "alembic" },
@@ -3020,9 +3020,9 @@ dependencies = [
     { name = "sqlalchemy-utils" },
     { name = "sqlmodel" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/14/35/c1c63aca2a42371e93c274d50a2f17e5d85ec33772af51e1803b198e71c9/zenml-0.84.3.tar.gz", hash = "sha256:ccdd60f0df161b43b39cd51a9477c95c970449ec28aaf2ad8e86d8dbb6ebc4c7", size = 3741178, upload-time = "2025-08-27T14:14:42.26Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e3/5f/a98ced133b983a63fabea48b499041ba90a5b08d206e96159195455f6a78/zenml-0.85.0.tar.gz", hash = "sha256:a65869496f4c190881e7746a21aa0643df68723357f9be87c39a765662163a5a", size = 3765517, upload-time = "2025-09-12T10:08:36.312Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/72/ba/d218fc8bc3906e5eceb55c09dcf9856f267a6017b3fb2594a21c80831a55/zenml-0.84.3-py3-none-any.whl", hash = "sha256:668c6419dbe727c0b036a234c011c83da9385e92cf79dde5793a58f537e0fd60", size = 4635064, upload-time = "2025-08-27T14:14:39.361Z" },
+    { url = "https://files.pythonhosted.org/packages/ba/3e/f9850165b9cdaf3c02c14608bb631c28a81d4bba0f162c9326ff2ccb7c5b/zenml-0.85.0-py3-none-any.whl", hash = "sha256:7db7f2bc05618f5d42b5c590ed02e2b0f7e1bb540ed559cbc988deafd1ef8f53", size = 4660800, upload-time = "2025-09-12T10:08:34.276Z" },
 ]
 
 [package.optional-dependencies]
@@ -3076,7 +3076,7 @@ requires-dist = [
     { name = "pip", specifier = ">=25.2" },
     { name = "python-rapidjson", specifier = "<1.15" },
     { name = "scikit-learn", specifier = ">=1.7.1" },
-    { name = "zenml", extras = ["server"], specifier = "==0.84.3" },
+    { name = "zenml", extras = ["server"], specifier = "==0.85.0" },
 ]
 
 [package.metadata.requires-dev]
