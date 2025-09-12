@@ -1064,7 +1064,7 @@ zenml:
       # nginx.ingress.kubernetes.io/rewrite-target: /$1
       # kubernetes.io/ingress.class: nginx
       # kubernetes.io/tls-acme: "true"
-      cert-manager.io/cluster-issuer: "letsencrypt-staging"
+      # cert-manager.io/cluster-issuer: "letsencrypt-staging"  # Disabled due to rate limit
 
     # hint: you can use a service like nip.io to get a wildcard DNS for your
     # ingress IP address. For example, if your ingress IP is 192.168.0.1, you
@@ -1079,7 +1079,7 @@ zenml:
       # domain name or IP address used to access the ZenML server from outside
       # the cluster.
       generateCerts: true
-      secretName: zenml-tls-certs
+      secretName: zenml-tls-certs-selfsigned
 
   # Configuration for custom CA certificates.
   certificates:
