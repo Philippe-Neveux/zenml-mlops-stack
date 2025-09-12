@@ -102,7 +102,7 @@ zenml:
   # clients will use the same URL used to connect them to the ZenML server.
   #
   # IMPORTANT: this value must be set for ZenML Pro servers.
-  serverURL: https://zenml.34.40.173.65.nip.io
+  serverURL: https://zenml-server.34.40.173.65.nip.io
 
   # The URL where the ZenML dashboard is reachable.
   # If not specified, the `serverURL` value is used. This should be
@@ -114,7 +114,7 @@ zenml:
   # running a pipeline and for other similar tasks.
   #
   # This value is overridden if the `zenml.pro.enabled` value is set.
-  dashboardURL: https://zenml.34.40.173.65.nip.io
+  dashboardURL: https://zenml-server.34.40.173.65.nip.io
 
   debug: true
 
@@ -1060,7 +1060,8 @@ zenml:
     enabled: true
     className: "nginx"
     annotations:
-      cert-manager.io/issuer: ""  # Empty string disables cert-manager auto-discovery
+      cert-manager.io/issuer: "do-not-use"  # Prevents cert-manager from acting
+      acme.cert-manager.io/disable: "true"  # Explicitly disable ACME
       # nginx.ingress.kubernetes.io/ssl-redirect: "true"
       # nginx.ingress.kubernetes.io/rewrite-target: /$1
       # kubernetes.io/ingress.class: nginx
@@ -1071,7 +1072,7 @@ zenml:
     # ingress IP address. For example, if your ingress IP is 192.168.0.1, you
     # can use a host name like zenml.192.168.0.1.nip.io. This allows you to
     # reuse the same ingress for multiple deployments and/or services.
-    host: zenml.34.40.173.65.nip.io
+    host: zenml-server.34.40.173.65.nip.io
     path: /
     tls:
       enabled: true
