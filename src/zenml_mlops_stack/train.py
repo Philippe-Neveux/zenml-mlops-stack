@@ -2,6 +2,7 @@ import logging
 from typing import Annotated, Tuple
 
 import pandas as pd
+from loguru import logger
 from sklearn.base import ClassifierMixin
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
@@ -68,6 +69,7 @@ def training_data_loader() -> Tuple[
         iris.data, iris.target, test_size=0.2, shuffle=True, random_state=42
     )
     mlflow.log_param("dataset", "iris")
+    logger.info(f"Train shape: {X_train.shape}, Test shape: {X_test.shape}")
     return X_train, X_test, y_train, y_test
 
 
@@ -116,6 +118,8 @@ def svc_trainer(
         artifact_path="iris_svc_model",
         registered_model_name="iris_classifier"
     )
+    
+    logger.info("Model training completed and logged to MLflow.")
 
     return model, train_acc
 

@@ -99,7 +99,7 @@ zenml-login:
 	uv run zenml login https://zenml.34.40.173.65.nip.io
 
 
-zenml-register-code-repository: zenml-login
+zenml-register-code-repository:
 	@echo "Registering code repository in ZenML..."
 	source .env && uv run zenml code-repository register Github_Repo \
 		--type=github \
@@ -112,12 +112,12 @@ tst:
 
 
 BUCKET_NAME := zenml-zenml-artifacts
-zenml-register-artifact-store: zenml-login
+zenml-register-artifact-store:
 	@echo "Registering GCS artifact store in ZenML..."
 	uv run zenml artifact-store register gs_store -f gcp --path=gs://$(BUCKET_NAME)
 
 ARTIFACT_REGISTRY_NAME := zenml-artifact-registry
-zenml-register-artifact-registry: zenml-login
+zenml-register-artifact-registry:
 	@echo "Registering GCP artifact registry in ZenML..."
 	uv run zenml container-registry register $(ARTIFACT_REGISTRY_NAME) \
     --flavor=gcp \
@@ -125,14 +125,14 @@ zenml-register-artifact-registry: zenml-login
 
 
 KUBERNETES_CONTEXT := gke_zenml-470505_australia-southeast1_zenml
-zenml-register-orchestrator: zenml-login
+zenml-register-orchestrator:
 	@echo "Registering default orchestrator in ZenML..."
 	zenml orchestrator register kubernetes_orchestrator \
 		--flavor=kubernetes \
 		--kubernetes_context=$(KUBERNETES_CONTEXT)
 
 MLFLOW_URI := https://mlflow.34.40.173.65.nip.io
-zenml-register-artifact-tracker: zenml-login
+zenml-register-artifact-tracker:
 	@echo "Registering MLflow in ZenML..."
 	uv run zenml experiment-tracker register mlflow \
 		--flavor=mlflow \
@@ -140,12 +140,12 @@ zenml-register-artifact-tracker: zenml-login
 		--tracking_username=admin \
 		--tracking_password=password
 
-zenml-register-model-registry: zenml-login
+zenml-register-model-registry:
 	@echo "Registering MLflow model registry in ZenML..."
 	uv run zenml model-registry register mlflow_model_registry \
 		--flavor=mlflow
 
-zenml-configure-mlops-stack: zenml-login
+zenml-configure-mlops-stack:
 	@echo "Configure MLOps stack with each component ..."
 	uv run zenml stack register mlops_stack \
 		-a gs_store \
@@ -161,15 +161,15 @@ gcp-connect-to-artifact-registry:
 
 ###############
 # Run pipelines
-run-process: zenml-login gcp-connect-to-artifact-registry
+run-process: gcp-connect-to-artifact-registry
 	@echo "Running training pipeline..."
 	uv run src/zenml_mlops_stack/main.py
 
-run-training: zenml-login gcp-connect-to-artifact-registry
+run-training: gcp-connect-to-artifact-registry
 	@echo "Running training pipeline..."
 	uv run src/zenml_mlops_stack/train.py
 
-schedule-training: zenml-login
+schedule-training:
 	@echo "Scheduling training pipeline to run every day at midnight..."
 	uv run src/zenml_mlops_stack/schedule_pipeline.py
 
@@ -180,7 +180,7 @@ kubectl-set-namespace-zenml:
 	@echo "Setting default namespace to zenml..."
 	kubectl config set-context --current --namespace=zenml
 
-kubectl-get-pods: kubectl-set-namespace-zenml
+get-pods: kubectl-set-namespace-zenml
 	@echo "Listing pods in the current namespace..."
 	kubectl get pods --sort-by=.metadata.creationTimestamp
 
