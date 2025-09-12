@@ -120,6 +120,10 @@ zenml-register-artifact-registry:
     --flavor=gcp \
     --uri=australia-southeast1-docker.pkg.dev/$(GCP_PROJECT_ID)/$(ARTIFACT_REGISTRY_NAME)
 
+zenml-register-image-builder:
+	@echo "Registering default image builder in ZenML..."
+	uv run zenml image-builder register local_docker_builder \
+		--flavor=local
 
 KUBERNETES_CONTEXT := gke_zenml-470505_australia-southeast1_zenml
 zenml-register-orchestrator:
