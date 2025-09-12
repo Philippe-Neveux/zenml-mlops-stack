@@ -1,12 +1,13 @@
 import logging
-from typing import Annotated, Tuple
+from math import gamma
+from typing import Annotated, Tuple, Literal
 
 import pandas as pd
 from loguru import logger
 from sklearn.base import ClassifierMixin
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
-from sklearn.svm import SVC
+from sklearn.linear_model import LogisticRegression
 
 import mlflow
 from zenml import Model, pipeline, step
@@ -94,29 +95,29 @@ model = Model(
         "experiment_tracker": mlflow_settings
     }
 )
-def svc_trainer(
+def logistic_regression_trainer(
     X_train: pd.DataFrame,
     y_train: pd.Series,
-    gamma: float = 0.001,
+    penalty: Literal["l1", "l2"] = "l2",
 ) -> Tuple[
     Annotated[ClassifierMixin, "trained_model"],
     Annotated[float, "training_acc"],
 ]:
-    """Train a sklearn SVC classifier."""
+    """Train a sklearn Logistic Regression classifier."""
 
-    model = SVC(gamma=gamma)
+    model = LogisticRegression(penalty=penalty, random_state=42)
     model.fit(X_train.to_numpy(), y_train.to_numpy())
 
     train_acc = model.score(X_train.to_numpy(), y_train.to_numpy())
     print(f"Train accuracy: {train_acc}")
     
     mlflow.log_metric("Train Accuracy", train_acc)
-    mlflow.log_param("gamma", gamma)
-    
+    mlflow.log_param("penalty", penalty)
+
     mlflow.sklearn.log_model(
         sk_model=model,
-        artifact_path="iris_svc_model",
-        registered_model_name="iris_classifier"
+        artifact_path="iris_logistic_model",
+        registered_model_name="iris_classifier_lr"
     )
     
     logger.info("Model training completed and logged to MLflow.")
@@ -132,10 +133,12 @@ def svc_trainer(
     },
     model=model
 )
-def training_pipeline(gamma: float = 0.002):
+def training_pipeline(
+    penalty: Literal["l1", "l2"] = "l2"
+):
     X_train, X_test, y_train, y_test = training_data_loader()
-    svc_trainer(gamma=gamma, X_train=X_train, y_train=y_train)
+    logistic_regression_trainer(penalty=penalty, X_train=X_train, y_train=y_train)
 
 
 if __name__ == "__main__":
-    training_pipeline(gamma=0.0015)
+    training_pipeline(penalty="l2")
