@@ -96,7 +96,7 @@ zenml-deploy:
 
 zenml-login:
 	@echo "Logging into ZenML..."
-	uv run zenml login https://zenml.34.40.173.65.nip.io
+	uv run zenml login https://zenml-server.34.40.173.65.nip.io
 
 
 zenml-register-code-repository:
@@ -106,9 +106,6 @@ zenml-register-code-repository:
 		--owner=Philippe-Neveux \
 		--repository=zenml-mlops-stack \
 		--token=$$GITHUB_TOKEN
-
-tst:
-	source .env && echo $$GITHUB_TOKEN
 
 
 BUCKET_NAME := zenml-zenml-artifacts

@@ -1060,13 +1060,11 @@ zenml:
     enabled: true
     className: "nginx"
     annotations:
-      cert-manager.io/issuer: "do-not-use"  # Prevents cert-manager from acting
-      acme.cert-manager.io/disable: "true"  # Explicitly disable ACME
+      cert-manager.io/cluster-issuer: "letsencrypt-staging"  # Use Let's Encrypt staging for testing
       # nginx.ingress.kubernetes.io/ssl-redirect: "true"
       # nginx.ingress.kubernetes.io/rewrite-target: /$1
       # kubernetes.io/ingress.class: nginx
       # kubernetes.io/tls-acme: "true"
-      # cert-manager.io/cluster-issuer: "letsencrypt-staging"  # Disabled due to rate limit
 
     # hint: you can use a service like nip.io to get a wildcard DNS for your
     # ingress IP address. For example, if your ingress IP is 192.168.0.1, you
@@ -1076,12 +1074,9 @@ zenml:
     path: /
     tls:
       enabled: true
-      # NOTE: if enabled, this will generate self-signed certificates during
-      # installation. This also requires that the ingress host be set to the
-      # domain name or IP address used to access the ZenML server from outside
-      # the cluster.
-      generateCerts: true
-      secretName: zenml-tls-certs-selfsigned
+      # Let cert-manager handle certificate generation via Let's Encrypt
+      generateCerts: false
+      secretName: zenml-tls-letsencrypt
 
   # Configuration for custom CA certificates.
   certificates:
