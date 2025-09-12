@@ -132,13 +132,18 @@ zenml-register-orchestrator: zenml-login
 		--kubernetes_context=$(KUBERNETES_CONTEXT)
 
 MLFLOW_URI := https://mlflow.34.40.173.65.nip.io
-zenml-register-mlflow: zenml-login
+zenml-register-artifact-tracker: zenml-login
 	@echo "Registering MLflow in ZenML..."
 	uv run zenml experiment-tracker register mlflow \
 		--flavor=mlflow \
 		--tracking_uri=$(MLFLOW_URI) \
 		--tracking_username=admin \
 		--tracking_password=password
+
+zenml-register-model-registry: zenml-login
+	@echo "Registering MLflow model registry in ZenML..."
+	uv run zenml model-registry register mlflow_model_registry \
+		--flavor=mlflow
 
 zenml-configure-mlops-stack: zenml-login
 	@echo "Configure MLOps stack with each component ..."
@@ -147,6 +152,7 @@ zenml-configure-mlops-stack: zenml-login
 		-c $(ARTIFACT_REGISTRY_NAME) \
 		-o kubernetes_orchestrator \
 		-e mlflow \
+		-r mlflow_model_registry \
 		--set
 
 gcp-connect-to-artifact-registry: 

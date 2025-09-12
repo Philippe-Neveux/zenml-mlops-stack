@@ -109,6 +109,13 @@ def svc_trainer(
     print(f"Train accuracy: {train_acc}")
     
     mlflow.log_metric("Train Accuracy", train_acc)
+    mlflow.log_param("gamma", gamma)
+    
+    mlflow.sklearn.log_model(
+        sk_model=model,
+        artifact_path="iris_svc_model",
+        registered_model_name="iris_classifier"
+    )
 
     return model, train_acc
 
