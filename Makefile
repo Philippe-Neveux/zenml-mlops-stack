@@ -111,7 +111,7 @@ zenml-register-code-repository:
 BUCKET_NAME := zenml-zenml-artifacts
 zenml-register-artifact-store:
 	@echo "Registering GCS artifact store in ZenML..."
-	uv run zenml artifact-store register gs_store -f gcp --path=gs://$(BUCKET_NAME)
+	uv run zenml artifact-store register gs_store -f gcp --path=gs://$(BUCKET_NAME)/project_test/
 
 ARTIFACT_REGISTRY_NAME := zenml-artifact-registry
 zenml-register-artifact-registry:
@@ -156,7 +156,7 @@ zenml-configure-mlops-stack:
 		-r mlflow_model_registry \
 		--set
 
-gcp-connect-to-artifact-registry: 
+gcp-connect-to-artifact-registry:
 	@echo "Connecting GCP to Artifact Registry..."
 	gcloud auth configure-docker australia-southeast1-docker.pkg.dev
 
