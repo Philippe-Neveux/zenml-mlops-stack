@@ -129,6 +129,12 @@ def logistic_regression_trainer(
 
     return model, train_acc
 
+@step(
+    experiment_tracker="mlflow_tracker",
+    settings={
+        "experiment_tracker": mlflow_settings
+    }
+)
 def evaluation_on_test_set(
     model: ClassifierMixin,
     X_test: pd.DataFrame,
