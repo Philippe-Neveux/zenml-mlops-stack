@@ -16,7 +16,11 @@ from zenml.config.docker_settings import PythonPackageInstaller
 
 docker_settings = DockerSettings(
     prevent_build_reuse=True,
-    build_config={"build_options": {"platform": "linux/amd64"}}
+    build_config={"build_options": {"platform": "linux/amd64"}},
+    pyproject_path="pyproject.toml"
+    # pyproject_export_command=[
+        
+    # ]
 )
 
 
