@@ -15,7 +15,7 @@ from zenml.config import DockerSettings
 from zenml.config.docker_settings import PythonPackageInstaller
 
 docker_settings = DockerSettings(
-    prevent_build_reuse=True,
+    # prevent_build_reuse=True,
     build_config={"build_options": {"platform": "linux/amd64"}},
     pyproject_path="pyproject.toml"
     # pyproject_export_command=[
@@ -129,6 +129,26 @@ def logistic_regression_trainer(
 
     return model, train_acc
 
+def evaluation_on_test_set(
+    model: ClassifierMixin,
+    X_test: pd.DataFrame,
+    y_test: pd.Series
+) -> float:
+    """Perform inference and return accuracy on test set."""
+    # Load the registered model from MLflow
+    loaded_model = mlflow.sklearn.load_model("models:/iris_classifier_lr/latest")
+    
+    # Make batch predictions on X_test
+    y_pred = loaded_model.predict(X_test.to_numpy())
+    
+    # Compute accuracy score using the loaded model
+    test_acc = loaded_model.score(X_test.to_numpy(), y_test.to_numpy())
+    print(f"Test accuracy: {test_acc}")
+    
+    # Log predictions and accuracy
+    mlflow.log_metric("Test Accuracy", test_acc)
+    
+    return test_acc
 
 @pipeline(
     enable_cache=False,
@@ -142,7 +162,8 @@ def training_pipeline(
     penalty: Literal["l1", "l2"] = "l2"
 ):
     X_train, X_test, y_train, y_test = training_data_loader()
-    logistic_regression_trainer(penalty=penalty, X_train=X_train, y_train=y_train)
+    model, _ = logistic_regression_trainer(penalty=penalty, X_train=X_train, y_train=y_train)
+    _ = evaluation_on_test_set(model=model, X_test=X_test, y_test=y_test)
 
 
 if __name__ == "__main__":
