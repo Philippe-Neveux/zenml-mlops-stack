@@ -1,205 +1,692 @@
 # ZenML MLOps Stack on Google Cloud
 
-A production-ready Terraform infrastructure for deploying ZenML on Google Kubernetes Engine (GKE) with HTTPS ingress support.
+A complete production-ready MLOps infrastructure deployment using Terraform, ArgoCD, and Kubernetes on Google Cloud Platform. This repository provides automated infrastructure provisioning and GitOps-based application deployment for a comprehensive ZenML stack.
 
-## Features
+## 🏗️ Architecture Overview
 
-### Infrastructure
+This stack deploys a complete MLOps environment with the following components:
+
+### Infrastructure Components
 - **GKE Autopilot Cluster**: Managed Kubernetes with automatic scaling and security
-- **VPC Networking**: Custom network with proper subnet configuration
-- **Cloud SQL MySQL**: Managed database for ZenML metadata storage
-- **Security**: IAM roles, service accounts, and network security rules
+- **VPC Networking**: Custom network with proper subnet configuration for security
+- **Cloud SQL MySQL**: Managed database for ZenML metadata storage with private networking
+- **Google Cloud Storage**: Artifact storage for ML models and datasets
+- **Artifact Registry**: Container image registry for custom Docker images
+- **Security**: IAM roles, service accounts, KMS encryption, and network security rules
 
-### HTTPS & Ingress (NEW)
-- **NGINX Ingress Controller**: Production-ready ingress with LoadBalancer
+### Application Stack (GitOps with ArgoCD)
+- **ArgoCD**: GitOps continuous deployment for Kubernetes applications
+- **NGINX Ingress Controller**: Production-ready ingress with LoadBalancer and HTTPS
+- **cert-manager**: Automatic Let's Encrypt TLS certificate management
+- **External Secrets Operator**: Secure secret management from Google Secret Manager
+- **ZenML Server**: ML pipeline orchestration and model registry
+- **MLflow Server**: ML experiment tracking and model serving
+
+### Security & Networking
 - **Automatic HTTPS**: Let's Encrypt certificates via cert-manager
-- **Custom Domains**: Support for your own domain with Google Cloud DNS
-- **nip.io Support**: Testing without DNS setup using `zenml.YOUR_IP.nip.io`
-- **Static IP**: Pre-allocated external IP address
+- **Private GKE nodes**: Nodes without public IPs for enhanced security
+- **Private database**: Cloud SQL accessible only from VPC
+- **Secret management**: Integration with Google Secret Manager
+- **Network security**: Firewall rules and IAM policies
 
-## Quick Start
+## 📋 Prerequisites
 
-### 1. Prerequisites
+Before starting the deployment, ensure you have the following:
 
-- Google Cloud account with billing enabled
-- `terraform` >= 1.0
-- `gcloud` CLI configured
-- `kubectl` for Kubernetes management
+### Required Tools
+- **Google Cloud SDK**: `gcloud` CLI configured and authenticated
+- **Terraform**: >= 1.0 for infrastructure provisioning
+- **kubectl**: Kubernetes CLI for cluster management
+- **Helm**: Package manager for Kubernetes (>= 3.0)
+- **Git**: For cloning the repository and GitOps workflows
 
-### 2. Configure Variables
+### Google Cloud Setup
+1. **Google Cloud Project**: Create a new project or use existing one
+2. **Billing Account**: Ensure billing is enabled on the project
+3. **APIs**: The following APIs will be automatically enabled by Terraform:
+   - Compute Engine API
+   - Kubernetes Engine API
+   - Cloud SQL Admin API
+   - Secret Manager API
+   - Cloud KMS API
+   - Service Networking API
+   - Cloud DNS API
+   - Cloud Storage API
+   - Artifact Registry API
 
-Edit `src/infra/variables.tf` or create a `terraform.tfvars` file:
+### Authentication
+```bash
+# Authenticate with Google Cloud
+gcloud auth login
+gcloud auth application-default login
 
-```hcl
-project_id   = "your-project-id"
-project_name = "zenml"
-region       = "us-central1"
-
-# Optional: For custom domain
-domain_name = "yourdomain.com"
-admin_email = "admin@yourdomain.com"
+# Set your project
+gcloud config set project YOUR_PROJECT_ID
 ```
 
-### 3. Deploy Infrastructure
+## 🚀 Complete Deployment Guide
+
+## 🚀 Complete Deployment Guide
+
+### Step 1: Prepare Your Environment
+
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/Philippe-Neveux/zenml-mlops-stack.git
+   cd zenml-mlops-stack
+   ```
+
+2. **Create GCS Bucket for Terraform State** (Replace `YOUR_PROJECT_ID`)
+   ```bash
+   # Create a bucket for Terraform state storage
+   gsutil mb gs://tf-backends-YOUR_PROJECT_ID
+   
+   # Enable versioning for state backup
+   gsutil versioning set on gs://tf-backends-YOUR_PROJECT_ID
+   ```
+
+3. **Configure Terraform Variables**
+   
+   Edit `src/infra/variables.tf` or create `src/infra/terraform.tfvars`:
+   ```hcl
+   # Required variables
+   project_id   = "your-new-project-id"
+   project_name = "zenml-mlops"
+   region       = "us-central1"
+   zone         = "us-central1-a"
+   
+   # Optional: For custom domain support
+   # domain_name = "yourdomain.com"
+   ```
+
+4. **Update Terraform Backend Configuration**
+   
+   Edit `src/infra/main.tf` to update the backend bucket:
+   ```hcl
+   backend "gcs" {
+     bucket = "tf-backends-YOUR_PROJECT_ID"  # Update this line
+     prefix = "zenml-infra/terraform.tfstate"
+   }
+   ```
+
+### Step 2: Deploy Infrastructure with Terraform
+
+1. **Initialize and Deploy Infrastructure**
+   ```bash
+   # Plan your terraform deployment
+   make tf-plan
+   
+   # Apply cloud infrastructure plan
+   make tf-apply
+   ```
+
+   This will deploy:
+   - VPC with public/private subnets
+   - GKE Autopilot cluster
+   - Cloud SQL MySQL instance
+   - IAM service accounts and roles
+   - Google Cloud Storage buckets
+   - Artifact Registry
+   - Security configurations
+
+2. **Get Infrastructure Outputs**
+   ```bash
+   # Display all outputs
+   cd src/infra
+   terraform output
+   
+   # Get specific outputs
+   terraform output cluster_name
+   terraform output mysql_connection_name
+   ```
+
+3. **Connect to the GKE Cluster**
+   ```bash
+   # Get cluster credentials
+   gcloud container clusters get-credentials $(terraform output -raw cluster_name) \
+     --region $(terraform output -raw region) \
+     --project $(terraform output -raw project_id)
+   
+   # Verify connection
+   kubectl get nodes
+   ```
+
+### Step 3: Install ArgoCD
+
+1. **Install ArgoCD in the Cluster**
+   ```bash
+    # Create ArgoCD namespace
+    kubectl create namespace argocd
+   
+    # Install ArgoCD
+    kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+   
+    # Wait for ArgoCD to be ready
+    kubectl wait --for=condition=available --timeout=300s deployment/argocd-server -n argocd
+
+    # Use the LoadBalancer of GCP
+    kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
+   ```
+
+2. **Access ArgoCD UI**
+   ```bash
+   # Get the ip adress and the user/password to connect
+    make argocd-access-info
+   ```
+
+### Step 4: Deploy Application Stack with ArgoCD
+
+The ArgoCD applications are configured with sync waves to ensure proper deployment order:
+
+1. **Wave 0**: External Secrets Operator
+2. **Wave 1**: Secret Store configuration
+3. **Wave 2**: cert-manager
+4. **Wave 3**: NGINX Ingress, Cluster Issuers, External Secrets
+5. **Wave 4**: ZenML RBAC, ZenML Server
+6. **Wave 5**: MLflow Infrastructure and Server
+
+**Deploy All Applications:**
 
 ```bash
-cd src/infra
-terraform init
-terraform apply
+# Apply all ArgoCD applications
+make argocd-apps-deploy-all
 ```
 
-### 4. Access Information
+### Step 5: Verify Deployment
+
+1. **Check ArgoCD Applications Status**
+   ```bash
+   # View all applications
+   kubectl get applications -n argocd
+   
+   # Check specific application
+   kubectl describe application zenml-server -n argocd
+   ```
+
+2. **Verify Infrastructure Components**
+   ```bash
+   # Check all pods across namespaces
+   kubectl get pods --all-namespaces
+   
+   # Check ingress status
+   kubectl get ingress --all-namespaces
+   
+   # Check certificates
+   kubectl get certificates --all-namespaces
+   ```
+
+3. **Get Access Information**
+   ```bash
+   # Get LoadBalancer IP
+   kubectl get svc -n nginx-ingress nginx-ingress-nginx-ingress-controller
+   
+   # Check ZenML server status
+   kubectl get pods -n zenml
+   kubectl logs -n zenml deployment/zenml-server
+   ```
+
+### Step 6: Configure Access and DNS
+
+1. **Using nip.io (Quick Testing)**
+   ```bash
+   # Get the external IP
+   EXTERNAL_IP=$(kubectl get svc -n nginx-ingress nginx-ingress-nginx-ingress-controller \
+     -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+   
+   echo "ZenML URL: https://zenml-server.$EXTERNAL_IP.nip.io"
+   echo "MLflow URL: https://mlflow.$EXTERNAL_IP.nip.io"
+   ```
+
+2. **Using Custom Domain**
+   
+   If you have a custom domain, create DNS records:
+   ```bash
+   # Point your domain to the LoadBalancer IP
+   # A record: zenml.yourdomain.com -> EXTERNAL_IP
+   # A record: mlflow.yourdomain.com -> EXTERNAL_IP
+   ```
+
+### Step 7: Access Your MLOps Stack
+
+1. **ZenML Server**
+   ```bash
+   # Access ZenML server
+   curl https://zenml-server.$EXTERNAL_IP.nip.io
+   ```
+
+2. **MLflow Server**
+   ```bash
+   # Access MLflow server
+   curl https://mlflow.$EXTERNAL_IP.nip.io
+   ```
+
+## 🔧 Configuration Details
+
+## 🔧 Configuration Details
+
+### Terraform Modules
+
+The infrastructure is organized into modular Terraform components:
+
+- **`modules/vpc`**: Virtual Private Cloud with public/private subnets
+- **`modules/gke`**: Google Kubernetes Engine Autopilot cluster
+- **`modules/mysql`**: Cloud SQL MySQL instance with private networking
+- **`modules/security`**: IAM roles, service accounts, and KMS keys
+- **`modules/storage`**: Google Cloud Storage buckets for artifacts
+- **`modules/artifact-registry`**: Container registry for Docker images
+
+### ArgoCD Applications
+
+Applications are deployed in synchronized waves for dependency management:
+
+| Application | Wave | Description |
+|-------------|------|-------------|
+| external-secrets-operator | 0 | Manages secrets from Google Secret Manager |
+| zenml-secret-store | 1 | Secret store configuration |
+| cert-manager | 2 | TLS certificate management |
+| nginx-ingress | 3 | Ingress controller and load balancer |
+| cluster-issuers | 3 | Let's Encrypt certificate issuers |
+| zenml-external-secrets | 3 | ZenML-specific secrets |
+| zenml-rbac | 4 | RBAC configuration for ZenML |
+| zenml-server | 4 | ZenML server deployment |
+| mlflow-infrastructure | 5 | MLflow infrastructure components |
+| mlflow-server | 5 | MLflow tracking server |
+
+### Security Configuration
+
+- **Private GKE Nodes**: Cluster nodes have no public IP addresses
+- **Private Database**: Cloud SQL accessible only from VPC networks
+- **Service Accounts**: Dedicated GCP service accounts with minimal permissions
+- **Workload Identity**: Secure binding between Kubernetes and GCP service accounts
+- **Secret Management**: Integration with Google Secret Manager via External Secrets Operator
+- **Network Security**: Firewall rules restricting access to necessary ports only
+
+## 🔍 Monitoring and Troubleshooting
+
+### Monitoring Commands
 
 ```bash
-# Get your ZenML access URL
-terraform output zenml_access_info
+# Check ArgoCD application status
+kubectl get applications -n argocd
 
-# Configure kubectl
-terraform output quick_commands
+# Monitor pod status across all namespaces
+kubectl get pods --all-namespaces
+
+# Check ingress and certificates
+kubectl get ingress,certificates --all-namespaces
+
+# View ArgoCD application details
+kubectl describe application zenml-server -n argocd
+
+# Check service endpoints
+kubectl get endpoints --all-namespaces
 ```
 
-## Architecture
+### Common Troubleshooting
+
+1. **Certificate Issues**
+   ```bash
+   # Check certificate status
+   kubectl describe certificate -n zenml
+   
+   # Check cert-manager logs
+   kubectl logs -n cert-manager deployment/cert-manager
+   
+   # Check cluster issuer status
+   kubectl describe clusterissuer letsencrypt-prod
+   ```
+
+2. **Ingress Issues**
+   ```bash
+   # Check NGINX ingress controller
+   kubectl logs -n nginx-ingress deployment/nginx-ingress-nginx-ingress-controller
+   
+   # Check ingress resources
+   kubectl describe ingress -n zenml
+   
+   # Check LoadBalancer service
+   kubectl describe svc -n nginx-ingress nginx-ingress-nginx-ingress-controller
+   ```
+
+3. **Database Connectivity**
+   ```bash
+   # Test MySQL connectivity from a pod
+   kubectl run mysql-test --image=mysql:8.0 --rm -it --restart=Never -- \
+     mysql -h <MYSQL_IP> -u zenml -p
+   
+   # Check CloudSQL Proxy (if used)
+   kubectl logs -n zenml deployment/cloudsql-proxy
+   ```
+
+4. **Secret Management**
+   ```bash
+   # Check external secrets status
+   kubectl get externalsecrets --all-namespaces
+   
+   # Check secret store connection
+   kubectl describe secretstore -n external-secrets-system
+   
+   # Check external secrets operator logs
+   kubectl logs -n external-secrets-system deployment/external-secrets
+   ```
+
+## 🧰 Management Operations
+
+### Updating Applications
+
+Applications are managed through GitOps. To update:
+
+1. **Update application manifests** in `src/argocd-apps/`
+2. **Commit changes** to the Git repository
+3. **ArgoCD will automatically sync** the changes (if auto-sync is enabled)
+
+Manual sync:
+```bash
+# Sync specific application
+argocd app sync zenml-server
+
+# Sync all applications
+argocd app sync --all
+```
+
+### Scaling Operations
+
+```bash
+# Scale ZenML server
+kubectl scale deployment zenml-server -n zenml --replicas=3
+
+# Check HPA status (if configured)
+kubectl get hpa -n zenml
+
+# View resource usage
+kubectl top nodes
+kubectl top pods --all-namespaces
+```
+
+### Backup and Recovery
+
+```bash
+# Backup ZenML database
+kubectl exec -n zenml deployment/zenml-server -- \
+  mysqldump -h <MYSQL_HOST> -u zenml -p zenml > zenml-backup.sql
+
+# Backup ArgoCD configuration
+kubectl get applications -n argocd -o yaml > argocd-apps-backup.yaml
+
+# Backup secrets
+kubectl get secrets --all-namespaces -o yaml > secrets-backup.yaml
+```
+
+## 🏗️ Infrastructure Details
+
+## 🏗️ Infrastructure Details
+
+### Network Architecture
 
 ```
 Internet
     ↓
 Google Cloud LoadBalancer (Static IP)
-    ↓
+    ↓ (HTTPS/TLS Termination)
 NGINX Ingress Controller
-    ↓
+    ↓ (HTTP Backend)
+┌─────────────────┬─────────────────┬─────────────────┐
+│   ZenML Server  │  MLflow Server  │  ArgoCD UI      │
+│   (port 8080)   │   (port 5000)   │   (port 8080)   │
+└─────────────────┴─────────────────┴─────────────────┘
+    ↓ (Private Network)
 ┌─────────────────┬─────────────────┐
-│   ZenML Server  │  Other Services │
-│   (port 8080)   │   (port 3000)   │
+│  Cloud SQL      │  Google Cloud   │
+│  MySQL          │  Storage        │
 └─────────────────┴─────────────────┘
-    ↓
-Cloud SQL MySQL (Private Network)
 ```
 
-## Components
+### Resource Specifications
 
-### Core Infrastructure
-- **VPC**: Custom network with public/private subnets
-- **GKE Autopilot**: Managed Kubernetes cluster
-- **Cloud SQL**: MySQL database for ZenML metadata
-- **IAM**: Service accounts and security policies
+**GKE Autopilot Cluster:**
+- **Node Pools**: Automatically managed by Google
+- **Networking**: VPC-native with private nodes
+- **Security**: Workload Identity enabled
+- **Scaling**: Automatic based on resource requests
 
-### Ingress & HTTPS
-- **NGINX Ingress**: Routes external traffic to services
-- **cert-manager**: Automatic TLS certificate management
-- **Let's Encrypt**: Free SSL/TLS certificates
-- **Cloud DNS**: Domain management (optional)
+**Cloud SQL MySQL:**
+- **Instance Type**: `db-n1-standard-2` (configurable)
+- **Storage**: 20GB SSD (auto-expanding)
+- **Backup**: Automated daily backups
+- **Security**: Private IP only, SSL enforcement
 
-## Usage Examples
+**Networking:**
+- **VPC**: Custom VPC with RFC 1918 IP ranges
+- **Subnets**: Separate subnets for nodes, pods, and services
+- **Firewall**: Restrictive rules for minimal attack surface
 
-### Using nip.io (No DNS Setup)
+### Cost Estimation (Monthly)
 
-Perfect for testing:
+| Component | Estimated Cost (USD) | Notes |
+|-----------|---------------------|-------|
+| GKE Autopilot | $74+ | Based on resource usage |
+| Cloud SQL (db-n1-standard-2) | $100+ | Includes storage and backup |
+| Cloud Load Balancer | $18+ | Forwarding rules and data processing |
+| Cloud Storage | $5+ | Object storage for artifacts |
+| Artifact Registry | $5+ | Container image storage |
+| **Total** | **~$202+** | Varies based on usage |
 
-```bash
-# Get your IP
-IP=$(terraform output -raw nginx_ingress_ip)
+*Note: Costs vary significantly based on actual resource usage, region, and sustained use discounts.*
 
-# Access ZenML
-curl https://zenml.$IP.nip.io
+## 🔄 GitOps Workflow
+
+### Repository Structure for GitOps
+
+```
+src/
+├── argocd-apps/           # ArgoCD Application definitions
+│   ├── cert-manager.yaml
+│   ├── external-secrets-operator.yaml
+│   ├── nginx-ingress.yaml
+│   ├── zenml-server.yaml
+│   └── ...
+├── k8s-cluster/           # Kubernetes manifests (if needed)
+├── zenml/                 # ZenML Helm chart customizations
+└── mlflow/                # MLflow Helm chart customizations
 ```
 
-### Using Custom Domain
+### GitOps Best Practices
 
-1. **With Terraform DNS management**:
-   ```hcl
-   domain_name = "example.com"
-   ```
+1. **Environment Separation**: Use branches or directories for different environments
+2. **Automated Sync**: Enable auto-sync for non-production environments
+3. **Manual Sync**: Use manual sync for production deployments
+4. **Health Checks**: Configure health checks for all applications
+5. **Rollback Strategy**: Use ArgoCD's rollback capabilities for quick recovery
 
-2. **Manual DNS setup**:
+## 🚀 Advanced Configuration
+
+### Custom Domain Setup
+
+1. **Configure DNS Provider**
    ```bash
-   # Point your domain to the LoadBalancer IP
-   IP=$(terraform output -raw nginx_ingress_ip)
-   # Create A record: zenml.example.com -> $IP
+   # If using Google Cloud DNS (managed by Terraform)
+   # Update variables.tf with your domain
+   domain_name = "yourdomain.com"
    ```
 
-### Deploy ZenML with Ingress
+2. **Manual DNS Configuration**
+   ```bash
+   # Get the LoadBalancer IP
+   kubectl get svc -n nginx-ingress nginx-ingress-nginx-ingress-controller
+   
+   # Create DNS records:
+   # A record: zenml.yourdomain.com → EXTERNAL_IP
+   # A record: mlflow.yourdomain.com → EXTERNAL_IP
+   # A record: argocd.yourdomain.com → EXTERNAL_IP
+   ```
 
-```bash
-# Deploy ZenML
-helm install zenml zenml/zenml-server --namespace zenml --create-namespace
+### SSL/TLS Certificate Configuration
 
-# Apply ingress configuration
-kubectl apply -f zenml-ingress-example.yaml
+Certificates are automatically managed by cert-manager and Let's Encrypt:
+
+```yaml
+# Example certificate resource (auto-created)
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: zenml-server-tls
+  namespace: zenml
+spec:
+  secretName: zenml-server-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+  - zenml.yourdomain.com
 ```
 
-## Documentation
+### High Availability Configuration
 
-- [HTTPS Ingress Setup Guide](docs/HTTPS_INGRESS_SETUP.md) - Complete setup instructions
-- [MySQL Connectivity](docs/MYSQL_CONNECTIVITY.md) - Database connection guide
-- [ZenML Deployment Info](docs/ZENML_DEPLOYMENT_INFO.md) - ZenML-specific configuration
+For production environments, consider:
 
-## Security Features
+1. **Multi-Zone Deployment**
+   ```hcl
+   # In variables.tf
+   zones = ["us-central1-a", "us-central1-b", "us-central1-c"]
+   ```
 
-- **Private GKE nodes**: Nodes don't have public IPs
-- **Private Cloud SQL**: Database only accessible from VPC
-- **Network security**: Firewall rules and IAM policies
-- **TLS termination**: HTTPS encryption at the LoadBalancer
-- **Let's Encrypt**: Automatic certificate renewal
+2. **Database High Availability**
+   ```hcl
+   # In modules/mysql/variables.tf
+   availability_type = "REGIONAL"
+   ```
 
-## Cost Optimization
+3. **Application Replicas**
+   ```yaml
+   # In ZenML values
+   replicaCount: 3
+   ```
 
-- **GKE Autopilot**: Pay only for running pods
-- **Single LoadBalancer**: One IP for all services
-- **Regional resources**: Avoid cross-region charges
-- **Free certificates**: Let's Encrypt (no certificate costs)
+## 📚 Additional Resources
 
-## Monitoring & Observability
+### Documentation Links
+- [ZenML Documentation](https://docs.zenml.io/)
+- [ArgoCD Documentation](https://argo-cd.readthedocs.io/)
+- [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/docs)
+- [Terraform Google Provider](https://registry.terraform.io/providers/hashicorp/google/latest/docs)
 
-```bash
-# Check ingress status
-kubectl get ingress -A
-
-# Monitor certificate status
-kubectl get certificates -A
-
-# View NGINX logs
-kubectl logs -n ingress-nginx deployment/ingress-nginx-controller
-```
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Certificate not ready**: Check cert-manager logs and DNS propagation
-2. **Ingress not accessible**: Verify LoadBalancer service and firewall rules
-3. **Domain not resolving**: Check DNS records and propagation
-
-### Useful Commands
+### Helpful Commands Reference
 
 ```bash
-# Get all infrastructure info
-terraform output
+# Quick infrastructure status
+make tf-output
 
-# Check cluster connectivity
-kubectl cluster-info
+# Connect to cluster
+make connect-k8s-cluster
 
-# Verify ingress controller
-kubectl get pods -n ingress-nginx
+# Test MySQL connectivity
+make test-mysql-connection
+
+# View all pods
+kubectl get pods --all-namespaces
+
+# Port forward ArgoCD
+kubectl port-forward svc/argocd-server -n argocd 8080:443
+
+# View application logs
+kubectl logs -f deployment/zenml-server -n zenml
 
 # Check certificate status
-kubectl get certificates -A
+kubectl get certificates --all-namespaces
+
+# Sync ArgoCD applications
+argocd app sync --all
 ```
 
-## Contributing
+## 🔒 Security Considerations
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test the infrastructure
-5. Submit a pull request
+### Production Security Checklist
 
-## License
+- [ ] **Network Security**: Verify firewall rules and private networking
+- [ ] **IAM Permissions**: Review and minimize service account permissions
+- [ ] **Secret Management**: Ensure all secrets are stored in Google Secret Manager
+- [ ] **TLS Certificates**: Verify HTTPS is enforced on all endpoints
+- [ ] **Database Security**: Confirm Cloud SQL is using private IPs and SSL
+- [ ] **Container Security**: Use trusted base images and scan for vulnerabilities
+- [ ] **Access Control**: Implement proper RBAC in Kubernetes and ArgoCD
+- [ ] **Monitoring**: Set up logging and monitoring for security events
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+### Security Best Practices
 
-## Support
+1. **Regular Updates**: Keep all components updated with latest security patches
+2. **Access Logging**: Enable audit logging for GKE and Cloud SQL
+3. **Network Policies**: Implement Kubernetes Network Policies for micro-segmentation
+4. **Image Scanning**: Use Container Analysis API for vulnerability scanning
+5. **Backup Security**: Encrypt backups and test recovery procedures
 
-For issues and questions:
-- Check the [troubleshooting guide](docs/HTTPS_INGRESS_SETUP.md#troubleshooting)
-- Review Terraform and kubectl logs
-- Open an issue with detailed error information
+## 🤝 Contributing
+
+### Development Workflow
+
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/my-feature`
+3. **Make changes and test**: Verify infrastructure and applications
+4. **Commit changes**: `git commit -am 'Add new feature'`
+5. **Push to branch**: `git push origin feature/my-feature`
+6. **Create Pull Request**: Submit PR with detailed description
+
+### Testing Changes
+
+```bash
+# Test Terraform changes
+cd src/infra
+terraform plan
+
+# Test ArgoCD applications
+kubectl apply --dry-run=client -f src/argocd-apps/
+
+# Validate Kubernetes manifests
+kubectl apply --dry-run=server -f src/k8s-cluster/
+```
+
+## 📝 License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support and Troubleshooting
+
+### Getting Help
+
+- **GitHub Issues**: Report bugs and request features
+- **Documentation**: Check the `docs/` directory for detailed guides
+- **Community**: Join ZenML and ArgoCD community forums
+
+### Common Issues and Solutions
+
+1. **ArgoCD Application Stuck in Progressing**
+   ```bash
+   kubectl describe application <app-name> -n argocd
+   kubectl logs -n argocd deployment/argocd-application-controller
+   ```
+
+2. **TLS Certificate Not Issuing**
+   ```bash
+   kubectl describe certificaterequest -n <namespace>
+   kubectl logs -n cert-manager deployment/cert-manager
+   ```
+
+3. **Database Connection Issues**
+   ```bash
+   # Check Cloud SQL instance status
+   gcloud sql instances describe <instance-name>
+   
+   # Test from within cluster
+   kubectl run mysql-test --image=mysql:8.0 --rm -it --restart=Never
+   ```
+
+4. **Ingress Not Accessible**
+   ```bash
+   kubectl describe ingress -n <namespace>
+   kubectl get events --all-namespaces | grep -i error
+   ```
+
+For more detailed troubleshooting guides, see the `docs/` directory.
+
+---
+
+**Built with ❤️ by the MLOps Community**

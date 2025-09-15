@@ -8,7 +8,7 @@ variable "project_name" {
 variable "project_id" {
   description = "Google Cloud Project ID"
   type        = string
-  default     = "zenml-470505"
+  default     = "zenml-472221"
 }
 
 variable "region" {
@@ -43,5 +43,5 @@ variable "enable_https" {
 variable "admin_email" {
   description = "Email address for Let's Encrypt certificate notifications"
   type        = string
-  default     = "admin@example.com"
+  default     = "pneveux.gcp3@gmail.com"
 }

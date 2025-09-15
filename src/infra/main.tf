@@ -14,7 +14,7 @@ terraform {
   }
 
   backend "gcs" {
-    bucket = "tf-backends"
+    bucket = "tf-backends-zenml-472221"
     prefix = "zenml-infra/terraform.tfstate"
   }
 }

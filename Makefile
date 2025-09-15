@@ -31,7 +31,7 @@ test-mysql-connection:
 # Kubernetes
 connect-k8s-cluster:
 	echo "Connecting to Kubernetes cluster..."
-	gcloud container clusters get-credentials zenml --region australia-southeast1 --project zenml-470505
+	gcloud container clusters get-credentials zenml --region australia-southeast1 --project zenml-472221
 
 helm-update:
 	helm repo update
@@ -250,6 +250,10 @@ argocd-app-cluster-issuers: connect-k8s-cluster
 	@echo "Deploying cluster-issuers via ArgoCD..."
 	kubectl apply -f src/argocd-apps/cluster-issuers.yaml
 
+argocd-app-zenml-rbac: connect-k8s-cluster
+	@echo "Deploying rbac via ArgoCD..."
+	kubectl apply -f src/argocd-apps/zenml-rbac.yaml
+
 argocd-app-zenml-secret-store: connect-k8s-cluster
 	@echo "Deploying zenml-secret-store via ArgoCD..."
 	kubectl apply -f src/argocd-apps/zenml-secret-store.yaml
@@ -270,11 +274,16 @@ argocd-app-mlflow-server: connect-k8s-cluster
 	@echo "Deploying mlflow-server via ArgoCD..."
 	kubectl apply -f src/argocd-apps/mlflow-server.yaml
 
-argocd-app-zenml-cert-cleanup: connect-k8s-cluster
-	@echo "Deploying zenml-cert-cleanup via ArgoCD..."
-	kubectl apply -f src/argocd-apps/zenml-cert-cleanup.yaml
-
-argocd-apps-deploy-all: argocd-app-external-secrets argocd-app-zenml-secret-store argocd-app-cert-manager argocd-app-cluster-issuers argocd-app-zenml-external-secrets argocd-app-nginx-ingress argocd-app-zenml-server
+argocd-apps-deploy-all: argocd-app-external-secrets \
+						argocd-app-nginx-ingress \
+						argocd-app-cert-manager \
+						argocd-app-cluster-issuers \
+						argocd-app-zenml-rbac \
+						argocd-app-zenml-secret-store \
+						argocd-app-zenml-external-secrets \
+						argocd-app-zenml-server \
+						argocd-app-mlflow-infrastructure \
+						argocd-app-mlflow-server
 	@echo "All ArgoCD applications deployed with proper sync wave ordering!"
 
 check-gcp-secrets:

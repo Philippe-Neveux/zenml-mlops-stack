@@ -2,7 +2,7 @@
 
 # Google Cloud Storage bucket for ZenML artifacts
 resource "google_storage_bucket" "zenml_artifacts" {
-  name     = "${var.project_name}-zenml-artifacts"
+  name     = "${var.project_id}-zenml-artifacts"
   location = var.region
   project  = var.project_id
 
@@ -45,7 +45,7 @@ resource "google_storage_bucket" "zenml_artifacts" {
 
 # Google Cloud Storage bucket for MLflow artifacts
 resource "google_storage_bucket" "mlflow_artifacts" {
-  name     = "${var.project_name}-mlflow-artifacts"
+  name     = "${var.project_id}-mlflow-artifacts"
   location = var.region
   project  = var.project_id
 
