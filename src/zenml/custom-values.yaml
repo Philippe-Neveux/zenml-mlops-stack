@@ -102,7 +102,7 @@ zenml:
   # clients will use the same URL used to connect them to the ZenML server.
   #
   # IMPORTANT: this value must be set for ZenML Pro servers.
-  serverURL: https://zenml-server.34.40.173.65.nip.io
+  serverURL: https://zenml-server.34.40.165.212.nip.io
 
   # The URL where the ZenML dashboard is reachable.
   # If not specified, the `serverURL` value is used. This should be
@@ -114,7 +114,7 @@ zenml:
   # running a pipeline and for other similar tasks.
   #
   # This value is overridden if the `zenml.pro.enabled` value is set.
-  dashboardURL: https://zenml-server.34.40.173.65.nip.io
+  dashboardURL: https://zenml-server.34.40.165.212.nip.io
 
   debug: true
 
@@ -603,7 +603,7 @@ zenml:
         # The GCP project ID to use. This must be set to the project ID where
         # the GCP Secrets Manager service that you want to use is located.
         # Mandatory for all authentication methods.
-        project_id: zenml-470505
+        project_id: zenml-472221
 
         # The GCP user account credentials to use to authenticate with the GCP
         # Secrets Manager instance. Required if the `authMethod` is set to
@@ -1071,7 +1071,7 @@ zenml:
     # ingress IP address. For example, if your ingress IP is 192.168.0.1, you
     # can use a host name like zenml.192.168.0.1.nip.io. This allows you to
     # reuse the same ingress for multiple deployments and/or services.
-    host: zenml-server.34.40.173.65.nip.io
+    host: zenml-server.34.40.165.212.nip.io
     path: /
     tls:
       enabled: true
@@ -1114,7 +1114,7 @@ serviceAccount:
   create: true
   # Annotations to add to the service account
   annotations:
-    iam.gke.io/gcp-service-account: zenml-zenml@zenml-470505.iam.gserviceaccount.com
+    iam.gke.io/gcp-service-account: zenml-zenml@zenml-472221.iam.gserviceaccount.com
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
   name: "zenml-server"
