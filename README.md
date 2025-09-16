@@ -204,9 +204,24 @@ gcloud config set project YOUR_PROJECT_ID
             iam.gke.io/gcp-service-account: zenml-zenml@<your-project-id>.iam.gserviceaccount.com
    ```
 
-   You cab retreive you nginx public ip adresse by doing:
+   You can retreive your nginx public ip adress by executing:
    ```bash
    kubectl get ingress -A
+   ```
+
+2. **Mlflow cutom values for Mlflow deployment**
+   ```yaml
+   mysql:
+      enabled: true
+      host: "X.X.X.X" # Put your mysql private ip adress here, to get it: gcloud sql instances list
+      port: 3306
+      database: "mlflow"
+   
+   artifactRoot:
+      gcs:
+         enabled: true
+         bucket: "<your-project-id>-mlflow-artifacts"
+         path: ""  # Use root level of bucket
    ```
 
 ### Step 4: Deploy Application Stack with ArgoCD

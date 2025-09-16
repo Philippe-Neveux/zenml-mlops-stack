@@ -128,7 +128,7 @@ zenml-register-image-builder:
 KUBERNETES_CONTEXT := gke_zenml-472221_australia-southeast1_zenml
 zenml-register-orchestrator:
 	@echo "Registering default orchestrator in ZenML..."
-	zenml orchestrator register kubernetes_orchestrator \
+	uv run zenml orchestrator register kubernetes_orchestrator \
 		--flavor=kubernetes \
 		--kubernetes_context=$(KUBERNETES_CONTEXT)
 

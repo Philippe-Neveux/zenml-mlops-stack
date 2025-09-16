@@ -1,7 +1,4 @@
 from zenml import pipeline, step
-from zenml.config import DockerSettings, PythonPackageInstaller
-
-docker_settings = DockerSettings(python_package_installer=PythonPackageInstaller.UV)
 
 from zenml.integrations.kubernetes.flavors import KubernetesOrchestratorSettings
 from zenml.integrations.kubernetes.pod_settings import KubernetesPodSettings
@@ -46,7 +43,6 @@ def train_model(data: dict) -> None:
 
 @pipeline(
     settings={
-        "docker": docker_settings,
         "orchestrator": k8s_settings
     }
 )
