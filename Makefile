@@ -82,7 +82,7 @@ kube-cleanup:
 ###############
 # ZenML Setup
 ZENML_VERSION := 0.84.3
-GCP_PROJECT_ID := zenml-470505
+GCP_PROJECT_ID := zenml-472221
 # !!! No more used because its handled by argocd !!!
 zenml-get-helm-chart:
 	@echo "Getting ZenML Helm chart..."
@@ -125,7 +125,7 @@ zenml-register-image-builder:
 	uv run zenml image-builder register local_docker_builder \
 		--flavor=local
 
-KUBERNETES_CONTEXT := gke_zenml-470505_australia-southeast1_zenml
+KUBERNETES_CONTEXT := gke_zenml-472221_australia-southeast1_zenml
 zenml-register-orchestrator:
 	@echo "Registering default orchestrator in ZenML..."
 	zenml orchestrator register kubernetes_orchestrator \
