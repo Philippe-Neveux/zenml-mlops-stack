@@ -96,7 +96,7 @@ zenml-deploy:
 
 zenml-login:
 	@echo "Logging into ZenML..."
-	uv run zenml login https://zenml-server.34.40.173.65.nip.io
+	uv run zenml login https://zenml-server.34.40.165.212.nip.io
 
 
 zenml-register-code-repository:
