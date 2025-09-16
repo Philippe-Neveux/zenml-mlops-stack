@@ -15,6 +15,16 @@ output "app_config_secret_id" {
   value       = google_secret_manager_secret.app_config.secret_id
 }
 
+output "zenml_default_username_secret_id" {
+  description = "ID of the ZenML default username secret"
+  value       = google_secret_manager_secret.zenml_default_username.secret_id
+}
+
+output "zenml_default_password_secret_id" {
+  description = "ID of the ZenML default password secret"
+  value       = google_secret_manager_secret.zenml_default_password.secret_id
+}
+
 output "internal_dns_zone_name" {
   description = "Name of the internal DNS zone"
   value       = google_dns_managed_zone.internal.name

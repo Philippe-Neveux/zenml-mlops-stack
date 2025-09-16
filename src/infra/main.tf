@@ -107,6 +107,10 @@ module "security" {
 
   network_name = module.vpc.network_name
 
+  # ZenML authentication configuration
+  zenml_default_username = var.zenml_default_username
+  zenml_default_password = var.zenml_default_password
+
   labels = var.common_labels
 
   depends_on = [module.vpc, module.project_services, module.gke]

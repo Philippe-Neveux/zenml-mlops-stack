@@ -45,3 +45,18 @@ variable "admin_email" {
   type        = string
   default     = "pneveux.gcp3@gmail.com"
 }
+
+# ZenML Authentication Configuration
+variable "zenml_default_username" {
+  description = "Default username for ZenML server"
+  type        = string
+  default     = "admin"
+  sensitive   = true
+}
+
+variable "zenml_default_password" {
+  description = "Default password for ZenML server"
+  type        = string
+  default     = "admin123!"
+  sensitive   = true
+}

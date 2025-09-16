@@ -89,6 +89,42 @@ resource "google_secret_manager_secret" "app_config" {
   labels = var.labels
 }
 
+# Secret Manager secret for ZenML default username
+resource "google_secret_manager_secret" "zenml_default_username" {
+  secret_id = "${var.project_name}-default-username"
+  project   = var.project_id
+
+  replication {
+    auto {}
+  }
+
+  labels = var.labels
+}
+
+# Secret Manager secret version for ZenML default username
+resource "google_secret_manager_secret_version" "zenml_default_username" {
+  secret      = google_secret_manager_secret.zenml_default_username.id
+  secret_data = var.zenml_default_username
+}
+
+# Secret Manager secret for ZenML default password
+resource "google_secret_manager_secret" "zenml_default_password" {
+  secret_id = "${var.project_name}-default-password"
+  project   = var.project_id
+
+  replication {
+    auto {}
+  }
+
+  labels = var.labels
+}
+
+# Secret Manager secret version for ZenML default password
+resource "google_secret_manager_secret_version" "zenml_default_password" {
+  secret      = google_secret_manager_secret.zenml_default_password.id
+  secret_data = var.zenml_default_password
+}
+
 # Custom IAM Roles for ZenML Secret Manager access
 resource "google_project_iam_custom_role" "zenml_secrets_store_creator" {
   role_id     = "ZenMLServerSecretsStoreCreator"

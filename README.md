@@ -174,6 +174,22 @@ gcloud config set project YOUR_PROJECT_ID
     make argocd-access-info
    ```
 
+### Step 4: Update Zenml deployment info
+
+1. **Update project id**
+   ```bash
+    # src/k8s-cluster/external-secrets/secret-store.yaml
+    apiVersion: external-secrets.io/v1
+    kind: SecretStore
+    metadata:
+    name: gcp-secret-store
+    namespace: zenml
+    spec:
+    provider:
+        gcpsm:
+        projectID: <put-your-porject-id-here> 
+   ```
+
 ### Step 4: Deploy Application Stack with ArgoCD
 
 The ArgoCD applications are configured with sync waves to ensure proper deployment order:
