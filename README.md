@@ -174,10 +174,10 @@ gcloud config set project YOUR_PROJECT_ID
     make argocd-access-info
    ```
 
-### Step 4: Update Zenml deployment info
+### Step 4: Update Kubernetes manifest files
 
-1. **Update project id**
-   ```bash
+1. **Update project id in external secrets**
+   ```yaml
     # src/k8s-cluster/external-secrets/secret-store.yaml
     apiVersion: external-secrets.io/v1
     kind: SecretStore
@@ -189,6 +189,16 @@ gcloud config set project YOUR_PROJECT_ID
         gcpsm:
         projectID: <put-your-porject-id-here> 
    ```
+
+2. **Update Mysql ip adress**
+   ```yaml
+    # src/k8s-cluster/external-secrets/secret-store.yaml
+    zenml:
+        database:
+            url: mysql://zenml@<mysql-private-ip-adress>:3306/zenml
+   ```
+
+
 
 ### Step 4: Deploy Application Stack with ArgoCD
 

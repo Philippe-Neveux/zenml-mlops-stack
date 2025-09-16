@@ -325,7 +325,8 @@ zenml:
     # option.
     #
     # E.g.: "mysql://admin:password@zenml-mysql:3306/database"
-    url: "mysql://zenml@10.175.0.3:3306/zenml"
+    # URL without password - password will be injected from secret
+    url: "mysql://zenml@10.191.0.3:3306/zenml"
 
     # The Kubernetes secret containing the MySQL password. If not set, the
     # password provided in the `url` option will be used.
