@@ -315,15 +315,6 @@ make argocd-apps-deploy-all
    echo "MLflow URL: https://mlflow.$EXTERNAL_IP.nip.io"
    ```
 
-2. **Using Custom Domain**
-   
-   If you have a custom domain, create DNS records:
-   ```bash
-   # Point your domain to the LoadBalancer IP
-   # A record: zenml.yourdomain.com -> EXTERNAL_IP
-   # A record: mlflow.yourdomain.com -> EXTERNAL_IP
-   ```
-
 ### Step 7: Access Your MLOps Stack
 
 1. **ZenML Server**
