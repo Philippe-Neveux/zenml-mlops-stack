@@ -17,7 +17,7 @@ metadata:
   name: mlflow
   namespace: mlflow
   annotations:
-    iam.gke.io/gcp-service-account: zenml-mlflow@zenml-470505.iam.gserviceaccount.com
+    iam.gke.io/gcp-service-account: zenml-mlflow@zenml-472221.iam.gserviceaccount.com
   labels:
     app.kubernetes.io/name: mlflow
     app.kubernetes.io/component: tracking-server
@@ -73,7 +73,7 @@ metadata:
 spec:
   provider:
     gcpsm:
-      projectID: zenml-470505  # Note: projectID not projectId
+      projectID: zenml-472221  # Corrected project ID
       # Use Workload Identity with MLflow service account
       auth:
         workloadIdentity:

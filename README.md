@@ -211,6 +211,7 @@ gcloud config set project YOUR_PROJECT_ID
 
 2. **Mlflow cutom values for Mlflow deployment**
    ```yaml
+   # src/mlflow/values.yaml
    mysql:
       enabled: true
       host: "X.X.X.X" # Put your mysql private ip adress here, to get it: gcloud sql instances list
@@ -222,6 +223,33 @@ gcloud config set project YOUR_PROJECT_ID
          enabled: true
          bucket: "<your-project-id>-mlflow-artifacts"
          path: ""  # Use root level of bucket
+   ```
+
+3. **Mlflow kubernetes manifest**
+   ```yaml
+   # src/k8s-cluster/mlflow/manifest.yaml
+   apiVersion: v1
+   kind: ServiceAccount
+   metadata:
+   name: mlflow
+   namespace: mlflow
+   annotations:
+      iam.gke.io/gcp-service-account: zenml-mlflow@<your-project-id>.iam.gserviceaccount.com
+   
+   ---
+   apiVersion: external-secrets.io/v1
+   kind: SecretStore
+   metadata:
+   name: mlflow-secret-store
+   namespace: mlflow
+   labels:
+      app.kubernetes.io/name: mlflow
+      app.kubernetes.io/component: external-secrets
+      app.kubernetes.io/part-of: zenml-mlops-stack
+   spec:
+   provider:
+      gcpsm:
+         projectID: <your-project-id>
    ```
 
 ### Step 4: Deploy Application Stack with ArgoCD
