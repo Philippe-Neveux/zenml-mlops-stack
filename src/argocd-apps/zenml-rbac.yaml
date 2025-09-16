@@ -5,7 +5,7 @@ metadata:
   namespace: argocd
   annotations:
     argocd.argoproj.io/refresh: normal
-    argocd.argoproj.io/sync-wave: "2"  # Deploy early, before zenml-server
+    argocd.argoproj.io/sync-wave: "1"  # Deploy early to create zenml namespace
   finalizers:
     - resources-finalizer.argocd.argoproj.io/background
 spec:

@@ -35,7 +35,7 @@ spec:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true
+      - CreateNamespace=false  # zenml namespace created by zenml-rbac app
       - ServerSideApply=true
     retry:
       limit: 5
