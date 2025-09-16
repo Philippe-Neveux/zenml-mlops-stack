@@ -190,15 +190,24 @@ gcloud config set project YOUR_PROJECT_ID
         projectID: <put-your-porject-id-here> 
    ```
 
-2. **Update Mysql ip adress**
+2. **Update cutom values for Zenml deployment**
    ```yaml
-    # src/k8s-cluster/external-secrets/secret-store.yaml
+    # src/zenml/custom-values.yaml
     zenml:
+        serverURL: https://zenml-server.<nginx-publc-ip-adress>.nip.io
+        dashboardURL: https://zenml-server.<nginx-publc-ip-adress>.nip.io
         database:
             url: mysql://zenml@<mysql-private-ip-adress>:3306/zenml
+
+    serviceAccount:
+        annotations:
+            iam.gke.io/gcp-service-account: zenml-zenml@<your-project-id>.iam.gserviceaccount.com
    ```
 
-
+   You cab retreive you nginx public ip adresse by doing:
+   ```bash
+   kubectl get ingress -A
+   ```
 
 ### Step 4: Deploy Application Stack with ArgoCD
 
