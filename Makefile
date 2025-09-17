@@ -83,6 +83,7 @@ kube-cleanup:
 # ZenML Setup
 ZENML_VERSION := 0.84.3
 GCP_PROJECT_ID := zenml-472221
+INGRESS_IP_ADDRESS := 34.40.165.212
 # !!! No more used because its handled by argocd !!!
 zenml-get-helm-chart:
 	@echo "Getting ZenML Helm chart..."
@@ -96,7 +97,7 @@ zenml-deploy:
 
 zenml-login:
 	@echo "Logging into ZenML..."
-	uv run zenml login https://zenml-server.34.40.165.212.nip.io
+	uv run zenml login https://zenml-server.$(INGRESS_IP_ADDRESS).nip.io
 
 
 zenml-register-code-repository:
@@ -108,7 +109,7 @@ zenml-register-code-repository:
 		--token=$$GITHUB_TOKEN
 
 
-BUCKET_NAME := zenml-zenml-artifacts
+BUCKET_NAME := zenml-472221-zenml-artifacts
 zenml-register-artifact-store:
 	@echo "Registering GCS artifact store in ZenML..."
 	uv run zenml artifact-store register gs_store -f gcp --path=gs://$(BUCKET_NAME)/project_test/
@@ -125,14 +126,14 @@ zenml-register-image-builder:
 	uv run zenml image-builder register local_docker_builder \
 		--flavor=local
 
-KUBERNETES_CONTEXT := gke_zenml-472221_australia-southeast1_zenml
+KUBERNETES_CONTEXT := gke_$(GCP_PROJECT_ID)_australia-southeast1_zenml
 zenml-register-orchestrator:
 	@echo "Registering default orchestrator in ZenML..."
 	uv run zenml orchestrator register kubernetes_orchestrator \
 		--flavor=kubernetes \
 		--kubernetes_context=$(KUBERNETES_CONTEXT)
 
-MLFLOW_URI := https://mlflow.34.40.173.65.nip.io
+MLFLOW_URI := https://mlflow.$(INGRESS_IP_ADDRESS).nip.io
 zenml-register-artifact-tracker:
 	@echo "Registering MLflow in ZenML..."
 	uv run zenml experiment-tracker register mlflow \
@@ -156,12 +157,12 @@ zenml-configure-mlops-stack:
 		-r mlflow_model_registry \
 		--set
 
+###############
+# Run pipelines
 gcp-connect-to-artifact-registry:
 	@echo "Connecting GCP to Artifact Registry..."
 	gcloud auth configure-docker australia-southeast1-docker.pkg.dev
 
-###############
-# Run pipelines
 run-process: gcp-connect-to-artifact-registry
 	@echo "Running training pipeline..."
 	uv run src/zenml_mlops_stack/main.py
