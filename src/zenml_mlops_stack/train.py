@@ -54,7 +54,7 @@ k8s_settings = KubernetesOrchestratorSettings(
 )
 
 @step(
-    experiment_tracker="mlflow_tracker",
+    experiment_tracker="mlflow",
     settings={
         "experiment_tracker": mlflow_settings
     }
@@ -95,7 +95,7 @@ model = Model(
 
 @step(
     model=model,
-    experiment_tracker="mlflow_tracker",
+    experiment_tracker="mlflow",
     settings={
         "experiment_tracker": mlflow_settings
     }
@@ -130,7 +130,7 @@ def logistic_regression_trainer(
     return model, train_acc
 
 @step(
-    experiment_tracker="mlflow_tracker",
+    experiment_tracker="mlflow",
     settings={
         "experiment_tracker": mlflow_settings
     }
