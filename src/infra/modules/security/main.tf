@@ -207,6 +207,13 @@ resource "google_project_iam_member" "zenml_artifact_registry_writer" {
   member  = "serviceAccount:${google_service_account.zenml.email}"
 }
 
+# Container developer access for ZenML service account
+resource "google_project_iam_member" "zenml_container_developer" {
+  project = var.project_id
+  role    = "roles/container.developer"
+  member  = "serviceAccount:${google_service_account.zenml.email}"
+}
+
 # Workload Identity binding for ZenML server
 resource "google_service_account_iam_member" "zenml_workload_identity" {
   service_account_id = google_service_account.zenml.name
