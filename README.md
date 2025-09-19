@@ -329,6 +329,15 @@ make argocd-apps-deploy-all
    curl https://mlflow.$EXTERNAL_IP.nip.io
    ```
 
+### Step 8: CI/CD secrets
+1. **Create Zenml URL Github Action secret**
+   Create a new Github secrets with the name: ZENML_STORE_URL with the value `https://zenml-server.$EXTERNAL_IP.nip.io`
+
+2. **Create Zenml service account**
+   ```bash
+   zenml service-account create github_action_api_key
+   ```
+
 ## 🔧 Configuration Details
 
 ## 🔧 Configuration Details

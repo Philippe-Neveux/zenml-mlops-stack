@@ -193,6 +193,13 @@ resource "google_project_iam_member" "zenml_storage_admin" {
   member  = "serviceAccount:${google_service_account.zenml.email}"
 }
 
+# GKE cluster access for ZenML service account
+resource "google_project_iam_member" "zenml_gke_viewer" {
+  project = var.project_id
+  role    = "roles/container.clusterViewer"
+  member  = "serviceAccount:${google_service_account.zenml.email}"
+}
+
 # Workload Identity binding for ZenML server
 resource "google_service_account_iam_member" "zenml_workload_identity" {
   service_account_id = google_service_account.zenml.name
