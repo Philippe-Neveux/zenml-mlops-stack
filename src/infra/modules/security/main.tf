@@ -304,3 +304,9 @@ resource "google_project_iam_member" "bentoml_service_account_user" {
   role    = "roles/iam.serviceAccountUser"
   member  = "serviceAccount:${google_service_account.bentoml.email}"
 }
+
+resource "google_project_iam_member" "zenml_cloudrun_viewer" {
+  project = var.project_id
+  role    = "roles/run.viewer"
+  member  = "serviceAccount:${google_service_account.zenml.email}"
+}
