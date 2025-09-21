@@ -77,3 +77,19 @@ output "mlflow_service_account_key_id" {
   description = "Unique ID of the MLflow service account"
   value       = google_service_account.mlflow.unique_id
 }
+
+# BentoML Service Account outputs
+output "bentoml_service_account_email" {
+  description = "Email of the BentoML service account for deployment"
+  value       = google_service_account.bentoml.email
+}
+
+output "bentoml_service_account_name" {
+  description = "Name of the BentoML service account"
+  value       = google_service_account.bentoml.name
+}
+
+output "bentoml_service_account_key_id" {
+  description = "Unique ID of the BentoML service account"
+  value       = google_service_account.bentoml.unique_id
+}

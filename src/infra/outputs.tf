@@ -377,4 +377,33 @@ output "artifact_registry_location" {
   value       = module.artifact_registry.location
 }
 
+# BentoML Service Account Outputs
+output "bentoml_service_account_email" {
+  description = "Email of the BentoML service account for deployment"
+  value       = module.security.bentoml_service_account_email
+}
+
+output "bentoml_service_account_name" {
+  description = "Name of the BentoML service account"
+  value       = module.security.bentoml_service_account_name
+}
+
+output "bentoml_deployment_config" {
+  description = "Configuration for BentoML deployment"
+  value = {
+    service_account = {
+      email = module.security.bentoml_service_account_email
+      name  = module.security.bentoml_service_account_name
+    }
+    infrastructure = {
+      project_id = var.project_id
+      region     = var.region
+    }
+    artifact_registry = {
+      repository_url = module.artifact_registry.repository_url
+      location       = module.artifact_registry.location
+    }
+  }
+}
+
 

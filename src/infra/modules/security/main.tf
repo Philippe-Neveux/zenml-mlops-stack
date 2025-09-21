@@ -244,6 +244,14 @@ resource "google_service_account" "mlflow" {
   project      = var.project_id
 }
 
+# BentoML Service Account for deployment
+resource "google_service_account" "bentoml" {
+  account_id   = "bentoml-deployer"
+  display_name = "BentoML Deployer"
+  description  = "Service account for BentoML deployment"
+  project      = var.project_id
+}
+
 # MLflow Service Account IAM bindings
 resource "google_project_iam_member" "mlflow_cloudsql_client" {
   project = var.project_id
@@ -276,4 +284,23 @@ resource "google_service_account_iam_member" "mlflow_workload_identity" {
   service_account_id = google_service_account.mlflow.name
   role               = "roles/iam.workloadIdentityUser"
   member             = "serviceAccount:${var.project_id}.svc.id.goog[mlflow/mlflow]"
+}
+
+# BentoML Service Account IAM bindings
+resource "google_project_iam_member" "bentoml_artifact_registry_admin" {
+  project = var.project_id
+  role    = "roles/artifactregistry.admin"
+  member  = "serviceAccount:${google_service_account.bentoml.email}"
+}
+
+resource "google_project_iam_member" "bentoml_run_admin" {
+  project = var.project_id
+  role    = "roles/run.admin"
+  member  = "serviceAccount:${google_service_account.bentoml.email}"
+}
+
+resource "google_project_iam_member" "bentoml_service_account_user" {
+  project = var.project_id
+  role    = "roles/iam.serviceAccountUser"
+  member  = "serviceAccount:${google_service_account.bentoml.email}"
 }

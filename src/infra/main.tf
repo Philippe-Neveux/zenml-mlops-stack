@@ -61,7 +61,8 @@ module "project_services" {
     "servicenetworking.googleapis.com",
     "dns.googleapis.com",
     "storage.googleapis.com",
-    "artifactregistry.googleapis.com"
+    "artifactregistry.googleapis.com",
+    "run.googleapis.com" // Added Cloud Run API
   ]
 }
 
