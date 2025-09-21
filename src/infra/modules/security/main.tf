@@ -214,6 +214,18 @@ resource "google_project_iam_member" "zenml_container_developer" {
   member  = "serviceAccount:${google_service_account.zenml.email}"
 }
 
+resource "google_project_iam_member" "zenml_cloudrun_viewer" {
+  project = var.project_id
+  role    = "roles/run.developer"
+  member  = "serviceAccount:${google_service_account.zenml.email}"
+}
+
+resource "google_project_iam_member" "zenml_act_as_service_account" {
+  project = var.project_id
+  role    = "roles/iam.serviceAccountUser"
+  member  = "serviceAccount:${google_service_account.zenml.email}"
+}
+
 # Workload Identity binding for ZenML server
 resource "google_service_account_iam_member" "zenml_workload_identity" {
   service_account_id = google_service_account.zenml.name
@@ -305,8 +317,3 @@ resource "google_project_iam_member" "bentoml_service_account_user" {
   member  = "serviceAccount:${google_service_account.bentoml.email}"
 }
 
-resource "google_project_iam_member" "zenml_cloudrun_viewer" {
-  project = var.project_id
-  role    = "roles/run.viewer"
-  member  = "serviceAccount:${google_service_account.zenml.email}"
-}
