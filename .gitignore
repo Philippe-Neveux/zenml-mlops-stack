@@ -8,3 +8,4 @@ __pycache__
 *-info/
 .ipynb_checkpoints
 .env
+site/

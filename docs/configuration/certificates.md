@@ -286,7 +286,7 @@ spec:
 
 ## 🚨 Troubleshooting
 
-See our dedicated [Certificate Troubleshooting Guide](../troubleshooting/certificates.md) for:
+For certificate troubleshooting:
 
 - DNS validation failures
 - Rate limiting issues

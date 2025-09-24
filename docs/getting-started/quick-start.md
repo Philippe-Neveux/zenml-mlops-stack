@@ -257,8 +257,8 @@ gsutil rm -r gs://tf-backends-$PROJECT_ID
 !!! success "Congratulations!"
     Your ZenML MLOps stack is now running! You can access ZenML and MLflow through their respective URLs.
 
-!!! tip "Production Setup"
-    For production deployment with custom domains and enhanced security, see the [Complete Deployment Guide](deployment.md).
+!!! tip "Production Features"
+    This guide includes production-ready features like HTTPS certificates, secure networking, and monitoring.
 
 !!! question "Issues?"
-    If you encounter problems, check the [troubleshooting guide](../troubleshooting/common-issues.md).
+    If you encounter problems, check the [troubleshooting guide](../troubleshooting/index.md).

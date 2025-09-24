@@ -5,9 +5,9 @@ This section provides comprehensive reference materials for the ZenML MLOps stac
 ## 📚 Reference Materials
 
 ### Quick Reference
-- **[Commands](commands.md)** - Essential commands and troubleshooting
-- **[Architecture](architecture.md)** - Detailed system architecture and design
-- **[Cost Optimization](cost.md)** - Cost management and optimization strategies
+- **Commands** - Essential commands and troubleshooting (see sections below)
+- **Architecture** - Detailed system architecture and design (see sections below)
+- **Cost Optimization** - Cost management and optimization strategies (see sections below)
 
 ### Technical Specifications
 - **Resource Requirements** - Minimum and recommended specifications

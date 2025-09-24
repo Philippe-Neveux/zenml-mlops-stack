@@ -198,7 +198,7 @@ Your Google Cloud user or service account needs these roles:
     Ensure you have `Owner` or `Editor` permissions on the Google Cloud project, as the deployment creates various resources and IAM bindings.
 
 !!! info "Billing"
-    This deployment will create billable resources. See the [cost estimation](../reference/cost.md) for details.
+    This deployment will create billable resources. See the cost estimation in the [reference section](../reference/index.md) for details.
 
 !!! tip "Region Selection"
     Choose a region close to your users for better performance. Popular choices are:
@@ -211,10 +211,9 @@ Your Google Cloud user or service account needs these roles:
 
 Once you have all prerequisites installed and configured:
 
-- [Quick Start](quick-start.md) - For testing and evaluation
-- [Complete Deployment](deployment.md) - For production setup
+- [Quick Start](quick-start.md) - For complete deployment setup
 
 ---
 
 !!! question "Need Help?"
-    If you encounter issues with the prerequisites, check our [troubleshooting guide](../troubleshooting/common-issues.md) or open an issue on GitHub.
+    If you encounter issues with the prerequisites, check our [troubleshooting guide](../troubleshooting/index.md) or open an issue on GitHub.

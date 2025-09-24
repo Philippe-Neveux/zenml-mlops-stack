@@ -78,7 +78,7 @@ This stack is perfect for:
 
 - [Prerequisites](getting-started/prerequisites.md) - Set up your environment
 - [Quick Start](getting-started/quick-start.md) - Deploy in minutes
-- [Architecture](reference/architecture.md) - Detailed system design
+- [Architecture](reference/index.md) - Detailed system design
 - [Troubleshooting](troubleshooting/index.md) - Common issues and solutions
 
 ## 🤝 Community

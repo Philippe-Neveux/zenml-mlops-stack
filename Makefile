@@ -296,3 +296,6 @@ check-gcp-secrets:
 
 doc-serve:
 	uv run mkdocs serve
+
+doc-build:
+	uv run mkdocs build --strict

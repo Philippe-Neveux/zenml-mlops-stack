@@ -61,8 +61,8 @@ markdown_extensions:
   - tables
   - footnotes
   - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
 nav:
   - Home: index.md
@@ -70,7 +70,6 @@ nav:
     - getting-started/index.md
     - Prerequisites: getting-started/prerequisites.md
     - Quick Start: getting-started/quick-start.md
-    - Complete Deployment: getting-started/deployment.md
   - Infrastructure:
     - infrastructure/index.md
   - Applications:
