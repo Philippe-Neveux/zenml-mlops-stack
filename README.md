@@ -1,6 +1,6 @@
 # ZenML MLOps Stack on Google Cloud
 
-[![Documentation](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://your-username.github.io/zenml-mlops-stack)
+[![Documentation](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://Philippe-Neveux.github.io/zenml-mlops-stack)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Terraform](https://img.shields.io/badge/terraform-1.0+-purple.svg)](https://www.terraform.io/)
 [![GKE](https://img.shields.io/badge/GKE-Autopilot-blue.svg)](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview)
@@ -64,7 +64,7 @@ Perfect for:
 
 ## 📚 Documentation
 
-**📖 [Complete Documentation](https://your-username.github.io/zenml-mlops-stack/)**
+**📖 [Complete Documentation](https://Philippe-Neveux.github.io/zenml-mlops-stack/)**
 
 ### Quick Links
 - [**Getting Started**](https://your-docs-url/getting-started/) - Step-by-step deployment guide
@@ -108,7 +108,7 @@ kubectl get certificates --all-namespaces
 ## 🚨 Support
 
 - **🐛 Issues**: [GitHub Issues](https://github.com/Philippe-Neveux/zenml-mlops-stack/issues)
-- **📖 Documentation**: [Complete Docs](https://your-username.github.io/zenml-mlops-stack/)
+- **📖 Documentation**: [Complete Docs](https://Philippe-Neveux.github.io/zenml-mlops-stack/)
 - **💬 Community**: [ZenML Slack](https://zenml.io/slack-invite/) | [ArgoCD Discussions](https://github.com/argoproj/argo-cd/discussions)
 
 ## 🤝 Contributing
