@@ -1,0 +1,97 @@
+site_name: ZenML MLOps Stack Documentation
+site_description: Production-ready MLOps infrastructure deployment using Terraform, ArgoCD, and Kubernetes on Google Cloud Platform
+site_author: MLOps Community
+site_url: https://your-username.github.io/zenml-mlops-stack
+
+repo_name: zenml-mlops-stack
+repo_url: https://github.com/Philippe-Neveux/zenml-mlops-stack
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.indexes
+    - navigation.top
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.action.edit
+    - content.action.view
+
+plugins:
+  - search
+  - mermaid2
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - md_in_html
+  - tables
+  - footnotes
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - getting-started/index.md
+    - Prerequisites: getting-started/prerequisites.md
+    - Quick Start: getting-started/quick-start.md
+    - Complete Deployment: getting-started/deployment.md
+  - Infrastructure:
+    - infrastructure/index.md
+  - Applications:
+    - applications/index.md
+  - Configuration:
+    - configuration/index.md
+    - SSL Certificates: configuration/certificates.md
+  - Operations:
+    - operations/index.md
+  - Troubleshooting:
+    - troubleshooting/index.md
+  - Reference:
+    - reference/index.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Philippe-Neveux/zenml-mlops-stack
+    - icon: fontawesome/solid/book
+      link: https://docs.zenml.io/
+  version:
+    provider: mike
+
+copyright: Copyright &copy; 2024 MLOps Community

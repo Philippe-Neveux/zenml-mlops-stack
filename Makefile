@@ -290,3 +290,9 @@ argocd-apps-deploy-all: argocd-app-external-secrets \
 check-gcp-secrets:
 	@echo "🔍 Checking GCP Secret Manager secrets..."
 	gcloud secrets list | grep zenml || echo "No zenml secrets found in GCP Secret Manager"
+
+##########
+# Mkdocs
+
+doc-serve:
+	uv run mkdocs serve

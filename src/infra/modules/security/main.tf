@@ -226,6 +226,13 @@ resource "google_project_iam_member" "zenml_act_as_service_account" {
   member  = "serviceAccount:${google_service_account.zenml.email}"
 }
 
+
+resource "google_project_iam_member" "zenml_container_admin" {
+  project = var.project_id
+  role    = "roles/container.admin"
+  member  = "serviceAccount:${google_service_account.zenml.email}"
+}
+
 # Workload Identity binding for ZenML server
 resource "google_service_account_iam_member" "zenml_workload_identity" {
   service_account_id = google_service_account.zenml.name

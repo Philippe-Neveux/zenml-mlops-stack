@@ -24,6 +24,12 @@ dev = [
     "pygithub>=2.8.1",
     "ruff>=0.12.12",
 ]
+doc = [
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.6.20",
+    "mkdocs-mermaid2-plugin>=1.2.2",
+    "pymdown-extensions>=10.16.1",
+]
 
 [tool.uv]
 package = true
