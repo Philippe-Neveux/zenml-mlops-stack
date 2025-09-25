@@ -4,7 +4,7 @@ A complete production-ready MLOps infrastructure deployment using Terraform, Arg
 
 ## 🏗️ Architecture Overview
 
-![ZenML Architecture](assets/zenml_mlops_stacks_architecture.png)
+![Architecture Overview](assets/zenml_mlops_stacks_architecture.png)
 
 This stack deploys a complete MLOps environment with the following components:
 
