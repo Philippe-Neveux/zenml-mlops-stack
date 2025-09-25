@@ -7,7 +7,7 @@
 
 A complete production-ready MLOps infrastructure deployment using Terraform, ArgoCD, and Kubernetes on Google Cloud Platform. This repository provides automated infrastructure provisioning and GitOps-based application deployment for a comprehensive ZenML stack.
 
-![ZenML Architecture](docs/assets/architecture-overview.png)
+![ZenML Architecture](docs/assets/zenml_mlops_stacks_architecture.png)
 
 ## 🚀 Quick Start
 
